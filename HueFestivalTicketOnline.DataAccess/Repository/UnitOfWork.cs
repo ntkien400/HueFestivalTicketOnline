@@ -29,6 +29,7 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
             Ticket = new TicketRepository(_dbContext);
             User = new UserRepository(_dbContext);
             News = new NewsRepository(_dbContext);
+            HistoryCheck = new HistoryCheckRepository(_dbContext);
         }
 
         public ITypeProgramRepository TypeProgram { get; private set; }
@@ -44,6 +45,7 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
         public ITicketRepository Ticket { get; set; }
         public IUserRepository User { get; set; }
         public INewsRepository News { get; set; }
+        public IHistoryCheckRepository HistoryCheck { get; set; }
         public async Task DisposeAsync()
         {
             await _dbContext.DisposeAsync();

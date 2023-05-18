@@ -8,6 +8,7 @@ using System.Drawing;
 using System;
 using System.Security.Cryptography;
 using System.Text;
+using HueFestivalTicketOnline.DataAccess.Repository.SendMail;
 
 namespace HueFestivalTicketOnline.Controllers
 {
@@ -44,44 +45,38 @@ namespace HueFestivalTicketOnline.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<CreateTicketDTO>> CreateTicket(CreateTicketDTO createTicketDto)
+        public async Task<ActionResult> CreateTicket(string invoiceId)
         {
-            var fesTypeTicket = await _unitOfWork.FesTypeTicket.GetAsync(createTicketDto.FesTypeTicketId);
-            if(fesTypeTicket == null)
-            {
-                return BadRequest("Type ticket invalid");
-            }
-
-            var program = await _unitOfWork.FesProgram.GetAsync(createTicketDto.FesProgramId);
-            if (program == null)
-            {
-                return BadRequest("Festival program invalid");
-            }
-
+            var invoice = await _unitOfWork.InvoiceTicket.GetFirstOrDefaultAsync(i => i.Id == Guid.Parse(invoiceId), includesProperties:"User,FesTypeTicket");
             var programDetail = await _unitOfWork.DetailFesLocation
-                .GetFirstOrDefaultAsync(pd => pd.FesId == createTicketDto.FesProgramId, includesProperties: "FesProgram,Location");
+                .GetFirstOrDefaultAsync(pd => pd.FesId == invoice.FesTypeTicket.FesProgramId, includesProperties: "FesProgram,Location");
             if(DateTime.Now >= DateTime.Parse(programDetail.EndDate))
             {
-                return BadRequest("Programe has ended");
+                return BadRequest("Festival has ended");
             }
 
+            //Ctreate ticket by quantity
             var ticket = new Ticket();
-            for (int i = 0; i < createTicketDto.Quantity; i++)
+            var listinfo = new List<string>();
+            for (int i = 0; i < invoice.Quantity; i++)
             {
                 ticket.TicketCode = GenerateTicketCode(12);
                 ticket.DateCreated = DateTime.Now;
                 ticket.DateExpried = DateTime.Parse(programDetail.EndDate);
                 ticket.TicketInfo = programDetail.FesProgram.ProgramName
-                                    + "\n" + programDetail.StartDate
-                                    + " - " + programDetail.EndDate
-                                    + "\n" + "VND" + fesTypeTicket.Price
+                                    + "\n" + "Bắt đầu:" + programDetail.StartDate
+                                    + "\n" + "Kết thúc:" + programDetail.EndDate
+                                    + "\n" + "Thời gian:" + programDetail.Time
+                                    + "\n" + "VND" + invoice.FesTypeTicket.Price
                                     + "\n" + "Mã vé: " + ticket.TicketCode
-                                    + "\n" + "Loại vé: " + fesTypeTicket.TypeName;
+                                    + "\n" + "Loại vé: " + invoice.FesTypeTicket.TypeName;
+                ticket.FesTypeTicketId = invoice.FesTypeTicketId;
+                ticket.UserId = invoice.UserId;
                 _unitOfWork.Ticket.Add(ticket);
-                ///await _unitOfWork.SaveAsync();
-                await _sendEmail.SendEmailAsync(createTicketDto.UserEmail, ticket);
-
+                listinfo.Add(ticket.TicketInfo);
             }
+            await _unitOfWork.SaveAsync();
+            await _sendEmail.SendEmailAsync(invoice.User.Email, listinfo);
             return Ok("Create ticket successfuly and sent to user email");
         }
 /*

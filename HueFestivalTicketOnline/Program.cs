@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using HueFestivalTicketOnline.DataAccess.Repository.SendMail;
 
 var builder = WebApplication.CreateBuilder(args);
 

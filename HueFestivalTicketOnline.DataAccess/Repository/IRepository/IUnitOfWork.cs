@@ -17,10 +17,11 @@ namespace HueFestivalTicketOnline.DataAccess.Repository.IRepository
         ISubMenuLocationRepository SubMenuLocation { get; }
         IDetailFesLocationRepository DetailFesLocation { get; }
         IFesTypeTicketRepository FesTypeTicket { get; }
-        IInvoiceTicketRepository InvoiceTicket { get; } 
+        IInvoiceTicketRepository InvoiceTicket { get; }
         ITicketRepository Ticket { get; }
         IUserRepository User { get; }
         INewsRepository News { get; }
+        IHistoryCheckRepository HistoryCheck {get;}
         Task DisposeAsync();
         Task SaveAsync();
     }

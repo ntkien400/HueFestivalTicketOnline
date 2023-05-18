@@ -5,14 +5,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HueFestivalTicketOnline.DataAccess.Repository
 {
-    public class InvoiceTicketRepository : GenericRepository<InvoiceTicket>, IInvoiceTicketRepository
+    public class HistoryCheckRepository : GenericRepository<HistoryCheck>, IHistoryCheckRepository
     {
         private readonly ApplicationDbContext _dbContext;
 
-        public InvoiceTicketRepository(ApplicationDbContext dbContext) : base(dbContext)
+        public HistoryCheckRepository(ApplicationDbContext dbContext) : base(dbContext)
         {
             _dbContext = dbContext;
         }
-
+        
     }
 }

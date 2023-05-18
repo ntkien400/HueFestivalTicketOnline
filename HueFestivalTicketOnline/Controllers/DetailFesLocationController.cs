@@ -29,7 +29,7 @@ namespace HueFestivalTicketOnline.Controllers
             var detailFes = await _unitOfWork.DetailFesLocation.GetAsync(id); 
             if(detailFes == null)
             {
-                return NotFound("Không tìm thấy dữ liệu.");
+                return NotFound("Data not exists");
             }
             return Ok(detailFes);
         }
@@ -49,7 +49,7 @@ namespace HueFestivalTicketOnline.Controllers
             var result = CheckDate(createDetail.StartDate, createDetail.EndDate);
             if(!result)
             {
-                return BadRequest("Ngày không hợp lệ.");
+                return BadRequest("Date invalid");
             }
             _unitOfWork.DetailFesLocation.Add(_mapper.Map<CreateDetailFesLocationDTO, DetailFesLocation>(createDetail));
             await _unitOfWork.SaveAsync();
@@ -68,7 +68,7 @@ namespace HueFestivalTicketOnline.Controllers
                 await _unitOfWork.SaveAsync();
                 return Ok(updateDetail);
             }
-            return BadRequest("Không thể cập nhật.");
+            return BadRequest("Something wrong when update");
             
         }
 
@@ -82,7 +82,7 @@ namespace HueFestivalTicketOnline.Controllers
                 await _unitOfWork.SaveAsync();
                 return Ok();
             }
-            return BadRequest("Không thể xoá dữ liệu.");
+            return BadRequest("Something wrong when delete");
         }
         private bool CheckDate(string s1, string s2)
         {

@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 namespace HueFestivalTicketOnline.DataAccess.Repository.IRepository
 {
-    public interface ISendEmail
+    public interface IHistoryCheckRepository : IGenericRepository<HistoryCheck>
     {
-        Task SendEmailAsync(string email, Ticket ticket);
+        
     }
 }
