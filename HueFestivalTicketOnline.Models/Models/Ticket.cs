@@ -11,6 +11,7 @@ namespace HueFestivalTicketOnline.Models.Models
     public class Ticket
     {
         [Key]
+        public int Id { get; set; }
         [Required, StringLength(12)]
         public string TicketCode { get; set; }
         [Required]

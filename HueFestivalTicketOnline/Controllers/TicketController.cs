@@ -9,6 +9,9 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using HueFestivalTicketOnline.DataAccess.Repository.SendMail;
+using HueFestivalTicketOnline.DTOs.Authentiction;
+using Microsoft.AspNetCore.Authorization;
+using System.Data;
 
 namespace HueFestivalTicketOnline.Controllers
 {
@@ -27,6 +30,7 @@ namespace HueFestivalTicketOnline.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<Ticket>> GetTicket(int id)
         {
             var detailFes = await _unitOfWork.Ticket.GetAsync(id);
@@ -38,6 +42,7 @@ namespace HueFestivalTicketOnline.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<List<Ticket>>> GetTickets()
         {
             var objs = await _unitOfWork.Ticket.GetAllAsync(includesProperties: "FesProgram,Location");
@@ -45,6 +50,7 @@ namespace HueFestivalTicketOnline.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult> CreateTicket(string invoiceId)
         {
             var invoice = await _unitOfWork.InvoiceTicket.GetFirstOrDefaultAsync(i => i.Id == Guid.Parse(invoiceId), includesProperties:"User,FesTypeTicket");
@@ -56,46 +62,49 @@ namespace HueFestivalTicketOnline.Controllers
             }
 
             //Ctreate ticket by quantity
-            var ticket = new Ticket();
-            var listinfo = new List<string>();
+            var listInfo = new List<string>();
+            var listTicket = new List<Ticket>();
             for (int i = 0; i < invoice.Quantity; i++)
             {
+                var ticket = new Ticket();
                 ticket.TicketCode = GenerateTicketCode(12);
                 ticket.DateCreated = DateTime.Now;
                 ticket.DateExpried = DateTime.Parse(programDetail.EndDate);
                 ticket.TicketInfo = programDetail.FesProgram.ProgramName
-                                    + "\n" + "Bắt đầu:" + programDetail.StartDate
-                                    + "\n" + "Kết thúc:" + programDetail.EndDate
-                                    + "\n" + "Thời gian:" + programDetail.Time
-                                    + "\n" + "VND" + invoice.FesTypeTicket.Price
-                                    + "\n" + "Mã vé: " + ticket.TicketCode
-                                    + "\n" + "Loại vé: " + invoice.FesTypeTicket.TypeName;
+                                    + "|" + programDetail.StartDate
+                                    + "|" + programDetail.EndDate
+                                    + "|" + programDetail.Time
+                                    + "|" + invoice.FesTypeTicket.Price
+                                    + "|" + ticket.TicketCode
+                                    + "|" + invoice.FesTypeTicket.TypeName;
                 ticket.FesTypeTicketId = invoice.FesTypeTicketId;
                 ticket.UserId = invoice.UserId;
-                _unitOfWork.Ticket.Add(ticket);
-                listinfo.Add(ticket.TicketInfo);
+                listTicket.Add(ticket);
+                listInfo.Add(ticket.TicketInfo);
             }
+            _unitOfWork.Ticket.AddRange(listTicket);
             await _unitOfWork.SaveAsync();
-            await _sendEmail.SendEmailAsync(invoice.User.Email, listinfo);
+            await _sendEmail.SendEmailAsync(invoice.User.Email, listInfo);
             return Ok("Create ticket successfuly and sent to user email");
         }
-/*
-        [HttpPut]
-        public async Task<ActionResult<CreateTicketDTO>> UpdateTicket(CreateTicketDTO updateTicket, int id)
-        {
-            var objFromDb = await _unitOfWork.Ticket.GetAsync(id);
-            if (objFromDb != null)
-            {
-                _mapper.Map(updateTicket, objFromDb);
-                _unitOfWork.Ticket.Update(objFromDb);
-                await _unitOfWork.SaveAsync();
-                return Ok(updateTicket);
-            }
-            return BadRequest("Không thể cập nhật.");
+        /*
+                [HttpPut]
+                public async Task<ActionResult<CreateTicketDTO>> UpdateTicket(CreateTicketDTO updateTicket, int id)
+                {
+                    var objFromDb = await _unitOfWork.Ticket.GetAsync(id);
+                    if (objFromDb != null)
+                    {
+                        _mapper.Map(updateTicket, objFromDb);
+                        _unitOfWork.Ticket.Update(objFromDb);
+                        await _unitOfWork.SaveAsync();
+                        return Ok(updateTicket);
+                    }
+                    return BadRequest("Không thể cập nhật.");
 
-        }
-*/
+                }
+        */
         [HttpDelete]
+        [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<Ticket>> DeleteTicket(int id)
         {
             var result = _unitOfWork.Ticket.Delete(id);

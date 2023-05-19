@@ -20,9 +20,8 @@ namespace HueFestivalTicketOnline.Models.Models
         public string AccountId { get; set; }
         [ForeignKey("AccountId")]
         public Account Account { get; set; }
-        [Required]
-        public int TicketId { get; set; }
-        [ForeignKey("TicketId")]
-        public Ticket Ticket { get; set; }
+        public int FesProgramId { get; set; }
+        [ForeignKey("FesProgramId")]
+        public FesProgram FesProgram { get; set; }
     }
 }

@@ -16,5 +16,11 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
         {
             _dbContext= dbContext;
         }
+
+        public int GetTicketIdByTicketCode(string ticketCode)
+        {
+            return _dbContext.Tickets.Where(t => t.TicketCode == ticketCode).Select(t => t.Id).SingleOrDefault();
+            
+        }
     }
 }

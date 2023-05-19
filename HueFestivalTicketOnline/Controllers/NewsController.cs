@@ -72,8 +72,8 @@ namespace HueFestivalTicketOnline.Controllers
 
                 news.ImageUrl = @"\images\" + fileName + extension;
                 news.DateCreated = DateTime.Now;
-                var userId = HttpContext.User.Claims.First(i => i.Type == ClaimTypes.NameIdentifier).Value;
-                news.AccountId = userId;
+                var AccountId = HttpContext.User.Claims.First(i => i.Type == ClaimTypes.NameIdentifier).Value;
+                news.AccountId = AccountId;
                 _mapper.Map(newsDto, news);
                 _unitOfWork.News.Add(news);
                 await _unitOfWork.SaveAsync();

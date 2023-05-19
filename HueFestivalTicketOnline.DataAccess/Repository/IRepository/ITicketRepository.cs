@@ -9,6 +9,6 @@ namespace HueFestivalTicketOnline.DataAccess.Repository.IRepository
 {
     public interface ITicketRepository : IGenericRepository<Ticket>
     {
-
+        public int GetTicketIdByTicketCode(string ticketCode); 
     }
 }

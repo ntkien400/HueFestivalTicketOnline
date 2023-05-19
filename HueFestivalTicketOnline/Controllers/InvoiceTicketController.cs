@@ -38,8 +38,8 @@ namespace HueFestivalTicketOnline.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
-        public async Task<ActionResult<List<InvoiceTicket>>> GetInvoiceTickets()
+        [Authorize(Roles = StaticUserRole.ADMIN)]
+        public async Task<ActionResult<List<InvoiceTicket>>> GetInvoiceTickets(string? Date, string? numberphone)
         {
             var objs = await _unitOfWork.InvoiceTicket.GetAllAsync(includesProperties:"FesProgram,Location");
             return Ok(objs);

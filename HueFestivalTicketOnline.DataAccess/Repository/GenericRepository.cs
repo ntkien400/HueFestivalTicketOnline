@@ -1,6 +1,7 @@
 ﻿using HueFestivalTicketOnline.DataAccess.Data;
 using HueFestivalTicketOnline.DataAccess.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using System.Linq.Expressions;
 
 namespace HueFestivalTicketOnline.DataAccess.Repository
@@ -42,11 +43,12 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
             return await dbSet.FindAsync(id);
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> filter = null, Func<IQueryable<T>
-            , IOrderedQueryable<T>> orderBy = null
-            , string includesProperties = null
-            , int skip =0
-            , int take =0)
+        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> filter = null,
+            List<Expression<Func<T, bool>>> includes = null ,
+            Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
+            string includesProperties = null,
+            int skip =0,
+            int take =0)
         {
             IQueryable<T> query = dbSet;
             if(filter !=null)
@@ -72,6 +74,13 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
             {
                 query = query.Take(take);
             }
+            if(includes != null)
+            {
+                foreach(Expression<Func<T,bool>> include in includes)
+                {
+                    query = query.Where(include);
+                }
+            }
             return await query.ToListAsync();
         }
 
@@ -96,6 +105,11 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
         public void Update(T entity)
         {
             dbSet.Attach(entity);
+        }
+
+        public void AddRange(IEnumerable<T> entities)
+        {
+            dbSet.AddRange(entities);
         }
     }
 }

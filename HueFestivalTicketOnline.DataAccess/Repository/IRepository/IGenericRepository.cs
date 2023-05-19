@@ -12,6 +12,7 @@ namespace HueFestivalTicketOnline.DataAccess.Repository.IRepository
         Task<T> GetAsync(int id);
         Task<IEnumerable<T>> GetAllAsync(
             Expression<Func<T, bool>> filter = null,
+            List<Expression<Func<T, bool>>> includes = null,
             Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
             string includesProperties = null,
             int skip = 0,
@@ -22,6 +23,7 @@ namespace HueFestivalTicketOnline.DataAccess.Repository.IRepository
             string includesProperties = null
             );
         void Add(T entity);
+        void AddRange(IEnumerable<T> entities);
         void Delete(T entity);
         bool Delete(int id);
         void Update(T entity);

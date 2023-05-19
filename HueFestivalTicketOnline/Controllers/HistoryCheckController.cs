@@ -1,11 +1,12 @@
 ﻿using AutoMapper;
 using HueFestivalTicketOnline.DataAccess.Repository.IRepository;
-using HueFestivalTicketOnline.DTOs;
 using HueFestivalTicketOnline.DTOs.Authentiction;
 using HueFestivalTicketOnline.Models.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
+using System.Linq.Expressions;
+using System.Security.Claims;
 
 namespace HueFestivalTicketOnline.Controllers
 {
@@ -14,16 +15,14 @@ namespace HueFestivalTicketOnline.Controllers
     public class HistoryCheckController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
 
-        public HistoryCheckController(IUnitOfWork unitOfWork, IMapper mapper)
+        public HistoryCheckController(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
-            _mapper = mapper;
         }
 
         [HttpGet("{id}")]
-        [AllowAnonymous]
+        [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<HistoryCheck>> GetHistoryCheck(int id)
         {
             var detailFes = await _unitOfWork.HistoryCheck.GetAsync(id); 
@@ -35,58 +34,109 @@ namespace HueFestivalTicketOnline.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
-        public async Task<ActionResult<List<HistoryCheck>>> GetHistoryChecks()
+        [Authorize(Roles =StaticUserRole.ADMIN)]
+        public async Task<ActionResult<List<HistoryCheck>>> GetHistoryChecks(string? Date, int? programId)
         {
-            var objs = await _unitOfWork.HistoryCheck.GetAllAsync(includesProperties:"FesProgram,Location");
+            var includes = new List<Expression<Func<HistoryCheck, bool>>>();
+            
+            if(Date != null)
+            {
+                includes.Add(x => x.DateChecked.Date.ToString() == Date);
+            }
+            if(programId != null)
+            {
+                includes.Add(y => y.FesProgramId == programId);
+            }
+            var objs = await _unitOfWork.HistoryCheck.GetAllAsync(includes:includes);
             return Ok(objs);
         }
 
         [HttpPost]
         [Authorize(Roles = StaticUserRole.ADMIN)]
-        public async Task<ActionResult> InsertHistoryCheck(string ticketInfo)
+        public async Task<ActionResult> InsertHistoryCheck(string ticketInfo, int programId)
         {
-            var listStr = ticketInfo.Split("\n");
-            var ticketCode = listStr[5].Substring(7,12);
-            var ticket = await _unitOfWork.Ticket.GetFirstOrDefaultAsync(t => t.TicketCode == ticketCode);
+            var historyCheck = new HistoryCheck();
+            var AccountId = HttpContext.User.Claims.First(i => i.Type == ClaimTypes.NameIdentifier).Value;
+            var listStr = ticketInfo.Split("|");
+            var ticketCode = listStr[5];
+            var ticket = await _unitOfWork.Ticket.GetFirstOrDefaultAsync(t => t.TicketCode == ticketCode, includesProperties:"FesTypeTicket");
+
             if(ticket != null)
             {
+                if(ticketInfo != ticket.TicketInfo)
+                {
+                    historyCheck.AccountId = AccountId;
+                    historyCheck.FesProgramId = programId;
+                    historyCheck.DateChecked = DateTime.Now;
+                    historyCheck.Status = false;
+                    _unitOfWork.HistoryCheck.Add(historyCheck);
+                    await _unitOfWork.SaveAsync();
+                    return BadRequest("Ticket invalid");
+                }
                 if(ticket.DateExpried < DateTime.Now)
                 {
-                    
+                    historyCheck.AccountId = AccountId;
+                    historyCheck.FesProgramId = programId;
+                    historyCheck.DateChecked = DateTime.Now;
+                    historyCheck.Status = false;
+                    _unitOfWork.HistoryCheck.Add(historyCheck);
+                    await _unitOfWork.SaveAsync(); 
                     return BadRequest("Ticket is expired");
                 }
-            }
-        }
-
-        [HttpPut]
-        [Authorize(Roles = StaticUserRole.ADMIN)]
-        public async Task<ActionResult<CreateHistoryCheckDTO>> UpdateHistoryCheck(CreateHistoryCheckDTO updateDetail, int id)
-        {
-            var objFromDb = await _unitOfWork.HistoryCheck.GetAsync(id);
-            if(objFromDb != null)
-            {
-                _mapper.Map(updateDetail, objFromDb);
-                _unitOfWork.HistoryCheck.Update(objFromDb);
+                if(ticket.FesTypeTicket.FesProgramId != programId)
+                {
+                    historyCheck.AccountId = AccountId;
+                    historyCheck.FesProgramId = programId;
+                    historyCheck.DateChecked = DateTime.Now;
+                    historyCheck.Status = false;
+                    _unitOfWork.HistoryCheck.Add(historyCheck);
+                    await _unitOfWork.SaveAsync();
+                    return BadRequest("Ticket invalid");
+                }
+                historyCheck.AccountId = AccountId;
+                historyCheck.FesProgramId = programId;
+                historyCheck.DateChecked = DateTime.Now;
+                historyCheck.Status = true;
+                _unitOfWork.HistoryCheck.Add(historyCheck);
                 await _unitOfWork.SaveAsync();
-                return Ok(updateDetail);
+                return Ok("Ticket valid");
+                
             }
-            return BadRequest("Something wrong when update");
+            else
+            {
+                return BadRequest("Ticket not exists");
+            }
             
         }
 
-        [HttpDelete]
-        [Authorize(Roles = StaticUserRole.ADMIN)]
-        public async Task<ActionResult<HistoryCheck>> DeleteHistoryCheck(int id)
-        {
-            var result = _unitOfWork.HistoryCheck.Delete(id);
-            if(result == true)
-            {
-                await _unitOfWork.SaveAsync();
-                return Ok();
-            }
-            return BadRequest("Something wrong when delete");
-        }
-        
+        //[HttpPut]
+        //[Authorize(Roles = StaticUserRole.ADMIN)]
+        //public async Task<ActionResult<CreateHistoryCheckDTO>> UpdateHistoryCheck(CreateHistoryCheckDTO updateDetail, int id)
+        //{
+        //    var objFromDb = await _unitOfWork.HistoryCheck.GetAsync(id);
+        //    if(objFromDb != null)
+        //    {
+        //        _mapper.Map(updateDetail, objFromDb);
+        //        _unitOfWork.HistoryCheck.Update(objFromDb);
+        //        await _unitOfWork.SaveAsync();
+        //        return Ok(updateDetail);
+        //    }
+        //    return BadRequest("Something wrong when update");
+            
+        //}
+
+        //[HttpDelete]
+        //[Authorize(Roles = StaticUserRole.ADMIN)]
+        //public async Task<ActionResult<HistoryCheck>> DeleteHistoryCheck(int id)
+        //{
+        //    var result = _unitOfWork.HistoryCheck.Delete(id);
+        //    if(result == true)
+        //    {
+        //        await _unitOfWork.SaveAsync();
+        //        return Ok();
+        //    }
+        //    return BadRequest("Something wrong when delete");
+        //}
+
     }
 }
