@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using HueFestivalTicketOnline.DTOs;
+using HueFestivalTicketOnline.Models.DTOs;
 using HueFestivalTicketOnline.Models.Models;
 namespace HueFestivalTicketOnline.Mapper
 {

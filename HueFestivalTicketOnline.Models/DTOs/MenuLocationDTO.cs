@@ -1,6 +1,4 @@
-﻿using HueFestivalTicketOnline.Models.Models;
-
-namespace HueFestivalTicketOnline.DTOs
+﻿namespace HueFestivalTicketOnline.Models.DTOs
 {
     public class MenuLocationDTO
     {

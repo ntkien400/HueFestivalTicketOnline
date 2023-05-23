@@ -1,8 +1,6 @@
-﻿using HueFestivalTicketOnline.Models.Models;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Http;
 
-namespace HueFestivalTicketOnline.DTOs
+namespace HueFestivalTicketOnline.Models.DTOs
 {
     public class CreateLocationDTO
     {

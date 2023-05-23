@@ -22,6 +22,7 @@ namespace HueFestivalTicketOnline.DataAccess.Repository.IRepository
         IUserRepository User { get; }
         INewsRepository News { get; }
         IHistoryCheckRepository HistoryCheck {get;}
+        IAccountRepository Account { get; }
         Task DisposeAsync();
         Task SaveAsync();
     }

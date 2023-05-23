@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace HueFestivalTicketOnline.DTOs.Authentiction
+namespace HueFestivalTicketOnline.Models.DTOs.Authentiction
 {
     public class UpdateRolesDTO
     {

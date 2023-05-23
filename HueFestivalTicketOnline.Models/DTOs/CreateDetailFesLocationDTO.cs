@@ -1,7 +1,4 @@
-﻿using HueFestivalTicketOnline.Models.Models;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace HueFestivalTicketOnline.DTOs
+﻿namespace HueFestivalTicketOnline.Models.DTOs
 {
     public class CreateDetailFesLocationDTO
     {

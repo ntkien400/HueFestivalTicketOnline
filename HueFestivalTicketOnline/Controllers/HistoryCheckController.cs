@@ -1,10 +1,8 @@
-﻿using AutoMapper;
-using HueFestivalTicketOnline.DataAccess.Repository.IRepository;
-using HueFestivalTicketOnline.DTOs.Authentiction;
+﻿using HueFestivalTicketOnline.DataAccess.Repository.IRepository;
+using HueFestivalTicketOnline.Models.DTOs.Authentiction;
 using HueFestivalTicketOnline.Models.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Globalization;
 using System.Linq.Expressions;
 using System.Security.Claims;
 
@@ -114,7 +112,7 @@ namespace HueFestivalTicketOnline.Controllers
         //public async Task<ActionResult<CreateHistoryCheckDTO>> UpdateHistoryCheck(CreateHistoryCheckDTO updateDetail, int id)
         //{
         //    var objFromDb = await _unitOfWork.HistoryCheck.GetAsync(id);
-        //    if(objFromDb != null)
+        //    if (objFromDb != null)
         //    {
         //        _mapper.Map(updateDetail, objFromDb);
         //        _unitOfWork.HistoryCheck.Update(objFromDb);
@@ -122,21 +120,21 @@ namespace HueFestivalTicketOnline.Controllers
         //        return Ok(updateDetail);
         //    }
         //    return BadRequest("Something wrong when update");
-            
+
         //}
 
-        //[HttpDelete]
-        //[Authorize(Roles = StaticUserRole.ADMIN)]
-        //public async Task<ActionResult<HistoryCheck>> DeleteHistoryCheck(int id)
-        //{
-        //    var result = _unitOfWork.HistoryCheck.Delete(id);
-        //    if(result == true)
-        //    {
-        //        await _unitOfWork.SaveAsync();
-        //        return Ok();
-        //    }
-        //    return BadRequest("Something wrong when delete");
-        //}
+        [HttpDelete]
+        [Authorize(Roles = StaticUserRole.ADMIN)]
+        public async Task<ActionResult<HistoryCheck>> DeleteHistoryCheck(int id)
+        {
+            var result = _unitOfWork.HistoryCheck.Delete(id);
+            if (result == true)
+            {
+                await _unitOfWork.SaveAsync();
+                return Ok();
+            }
+            return BadRequest("Something wrong when delete");
+        }
 
     }
 }

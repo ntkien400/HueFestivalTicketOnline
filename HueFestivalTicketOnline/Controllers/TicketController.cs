@@ -1,17 +1,11 @@
-﻿using AutoMapper;
-using HueFestivalTicketOnline.DataAccess.Repository.IRepository;
-using HueFestivalTicketOnline.DTOs;
+﻿using HueFestivalTicketOnline.DataAccess.Repository.IRepository;
 using HueFestivalTicketOnline.Models.Models;
-using QRCoder;
 using Microsoft.AspNetCore.Mvc;
-using System.Drawing;
-using System;
 using System.Security.Cryptography;
 using System.Text;
-using HueFestivalTicketOnline.DataAccess.Repository.SendMail;
-using HueFestivalTicketOnline.DTOs.Authentiction;
 using Microsoft.AspNetCore.Authorization;
-using System.Data;
+using HueFestivalTicketOnline.Models.DTOs.Authentiction;
+using HueFestivalTicketOnline.DataAccess.Repository.SendMailAndSms;
 
 namespace HueFestivalTicketOnline.Controllers
 {
@@ -20,12 +14,10 @@ namespace HueFestivalTicketOnline.Controllers
     public class TicketController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
         private readonly ISendEmail _sendEmail;
-        public TicketController(IUnitOfWork unitOfWork, IMapper mapper, ISendEmail sendEmail)
+        public TicketController(IUnitOfWork unitOfWork, ISendEmail sendEmail)
         {
             _unitOfWork = unitOfWork;
-            _mapper = mapper;
             _sendEmail = sendEmail;
         }
 

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace HueFestivalTicketOnline.DTOs.Authentiction
+namespace HueFestivalTicketOnline.Models.DTOs.Authentiction
 {
     public class RegisterDTO
     {
@@ -8,9 +8,9 @@ namespace HueFestivalTicketOnline.DTOs.Authentiction
         public string UserName { get; set; }
         [Required(ErrorMessage = "Password is required")]
         public string Password { get; set; }
-        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress, Required(ErrorMessage = "Email is required")]
         public string Email { get; set; }
-        [Required(ErrorMessage = "Phone is required")]
-        public string Phone { get; set; }
+        [Phone, Required(ErrorMessage = "Phone is required")]
+        public string PhoneNumber { get; set; }
     }
 }

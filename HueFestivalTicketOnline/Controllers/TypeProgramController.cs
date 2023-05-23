@@ -1,9 +1,7 @@
-﻿using AutoMapper;
-using HueFestivalTicketOnline.DataAccess.Repository.IRepository;
-using HueFestivalTicketOnline.DTOs.Authentiction;
+﻿using HueFestivalTicketOnline.DataAccess.Repository.IRepository;
+using HueFestivalTicketOnline.Models.DTOs.Authentiction;
 using HueFestivalTicketOnline.Models.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HueFestivalTicketOnline.Controllers

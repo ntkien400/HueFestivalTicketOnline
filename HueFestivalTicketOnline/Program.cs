@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
-using HueFestivalTicketOnline.DataAccess.Repository.SendMail;
+using HueFestivalTicketOnline.DataAccess.Repository.SendMailAndSms;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +46,8 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ISendEmail, SendEmail>();
+builder.Services.AddScoped<ISendSms, SendSms>();
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddAutoMapper(typeof(MappingProfiles));
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

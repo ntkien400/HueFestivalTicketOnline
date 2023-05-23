@@ -1,4 +1,4 @@
-﻿namespace HueFestivalTicketOnline.DTOs.Authentiction
+﻿namespace HueFestivalTicketOnline.Models.DTOs.Authentiction
 {
     public static class StaticUserRole
     {

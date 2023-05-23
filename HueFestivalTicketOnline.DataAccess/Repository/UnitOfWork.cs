@@ -1,5 +1,7 @@
 ﻿using HueFestivalTicketOnline.DataAccess.Data;
 using HueFestivalTicketOnline.DataAccess.Repository.IRepository;
+using HueFestivalTicketOnline.Models.Models;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,10 +14,12 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
     public class UnitOfWork : IUnitOfWork
     {
         private readonly ApplicationDbContext _dbContext;
+        private readonly UserManager<Account> _userManager;
 
-        public UnitOfWork(ApplicationDbContext dbContext)
+        public UnitOfWork(ApplicationDbContext dbContext, UserManager<Account> userManager)
         {
             _dbContext = dbContext;
+            _userManager = userManager;
             TypeProgram = new TypeProgramRepository(_dbContext);
             TypeOffline = new TypeOfflineRepository(_dbContext);
             Image = new ImageRepository(_dbContext);
@@ -30,22 +34,24 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
             User = new UserRepository(_dbContext);
             News = new NewsRepository(_dbContext);
             HistoryCheck = new HistoryCheckRepository(_dbContext);
+            Account = new AccountRepository(_dbContext);
         }
 
         public ITypeProgramRepository TypeProgram { get; private set; }
         public ITypeOfflineRepository TypeOffline { get; private set; }
         public IImageRepository Image { get; private set; }
-        public IFesProgramRepository FesProgram { get; set; }
-        public ILocationRepository Location { get; set; }
-        public IMenuLocationRepository MenuLocation { get; set; }
-        public ISubMenuLocationRepository SubMenuLocation { get; set; }
-        public IDetailFesLocationRepository DetailFesLocation { get; set; }
-        public IFesTypeTicketRepository FesTypeTicket { get; set; }
-        public IInvoiceTicketRepository InvoiceTicket { get; set; }
-        public ITicketRepository Ticket { get; set; }
-        public IUserRepository User { get; set; }
-        public INewsRepository News { get; set; }
-        public IHistoryCheckRepository HistoryCheck { get; set; }
+        public IFesProgramRepository FesProgram { get; private set; }
+        public ILocationRepository Location { get; private set; }
+        public IMenuLocationRepository MenuLocation { get; private set; }
+        public ISubMenuLocationRepository SubMenuLocation { get; private set; }
+        public IDetailFesLocationRepository DetailFesLocation { get; private set; }
+        public IFesTypeTicketRepository FesTypeTicket { get; private set; }
+        public IInvoiceTicketRepository InvoiceTicket { get; private set; }
+        public ITicketRepository Ticket { get; private set; }
+        public IUserRepository User { get; private set; }
+        public INewsRepository News { get; private set; }
+        public IHistoryCheckRepository HistoryCheck { get; private set; }
+        public IAccountRepository Account { get; private set; }
         public async Task DisposeAsync()
         {
             await _dbContext.DisposeAsync();

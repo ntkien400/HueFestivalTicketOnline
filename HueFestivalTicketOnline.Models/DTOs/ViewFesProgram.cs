@@ -1,8 +1,6 @@
 ﻿using HueFestivalTicketOnline.Models.Models;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
 
-namespace HueFestivalTicketOnline.DTOs
+namespace HueFestivalTicketOnline.Models.DTOs
 {
     public class ViewFesProgram
     {
