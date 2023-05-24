@@ -9,6 +9,6 @@ namespace HueFestivalTicketOnline.DataAccess.Repository.IRepository
 {
     public interface IAccountRepository : IGenericRepository<Account>
     {
-        public string GenerateOTPCode(int length);
+
     }
 }

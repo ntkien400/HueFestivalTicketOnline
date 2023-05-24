@@ -30,11 +30,10 @@ namespace HueFestivalTicketOnline.Controllers
             {
                 return Ok(objFromDb);
             }
-            return NotFound("Không tìm thấy dữ liệu");
+            return NotFound("Type ticket not exists");
         }
 
         [HttpGet]
-
         [AllowAnonymous]
         public async Task<ActionResult<List<FesTypeTicket>>> GetProgramTypeTickets()
         {
@@ -49,8 +48,12 @@ namespace HueFestivalTicketOnline.Controllers
             var programTypeTicket = new FesTypeTicket();
             _mapper.Map(programTypeTicketDto, programTypeTicket);
             _unitOfWork.FesTypeTicket.Add(programTypeTicket);
-            await _unitOfWork.SaveAsync();
-            return Ok("Thêm thành công");
+            var result = await _unitOfWork.SaveAsync();
+            if(result > 0)
+            {
+                return Ok("Thêm thành công");
+            }
+            return BadRequest("Something wrong when adding");
         }
 
         [HttpPut]
@@ -62,24 +65,33 @@ namespace HueFestivalTicketOnline.Controllers
             {
                 _mapper.Map(programTypeTicketDto, objFromDb);
                 _unitOfWork.FesTypeTicket.Update(objFromDb);
-                await _unitOfWork.SaveAsync();
-                return Ok("Cập nhật thành công");
+                var result = await _unitOfWork.SaveAsync();
+                if(result > 0)
+                {
+                    return Ok("Update successfully");
+                }
+                return BadRequest("Something wrong when updating");
             }
-            return BadRequest("Lỗi cập nhật");
+            return NotFound("can't find type ticket to update");
            
         }
 
         [HttpDelete]
         [Authorize(Roles = StaticUserRole.ADMIN)]
-        public async Task<ActionResult> DeleteProgramTypeTicket(int id)
+        public async Task<ActionResult> DeleteFesTypeTicket(int id)
         {
-            var result = _unitOfWork.FesTypeTicket.Delete(id);
-            if (result == true)
+            var fesTypeTicket = await _unitOfWork.FesTypeTicket.GetAsync(id);
+            if (fesTypeTicket != null)
             {
-                await _unitOfWork.SaveAsync();
-                return Ok("Xoá thành công");
+                _unitOfWork.FesTypeTicket.Delete(fesTypeTicket);
+                var result = await _unitOfWork.SaveAsync();
+                if (result > 0)
+                {
+                    return Ok("Delete successfully");
+                }
+                return BadRequest("Something wrong when deleting");
             }
-            return BadRequest("Lỗi xoá");
+            return NotFound("Can't find fes type ticket to delete");
         }
     }
 }

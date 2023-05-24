@@ -16,14 +16,19 @@ namespace HueFestivalTicketOnline.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("get-type")]
         [AllowAnonymous]
         public async Task<ActionResult<TypeProgram>> GetTypeProgram(int id)
         {
-            return await _unitOfWork.TypeProgram.GetAsync(id);
+            var typeProgram = await _unitOfWork.TypeProgram.GetAsync(id);
+            if(typeProgram !=null)
+            {
+                return Ok(typeProgram);
+            }
+            return NotFound("Type program not exists");
         }
 
-        [HttpGet]
+        [HttpGet("get-all-type")]
         [AllowAnonymous]
         public async Task<ActionResult<List<TypeProgram>>> GetTypePrograms()
         {
@@ -33,31 +38,52 @@ namespace HueFestivalTicketOnline.Controllers
 
         [HttpPost]
         [Authorize(Roles = StaticUserRole.ADMIN)]
-        public async Task AddTypeProgram(TypeProgram typeProgram)
+        public async Task<ActionResult<TypeProgram>> AddTypeProgram([FromForm]TypeProgram typeProgram)
         {
             _unitOfWork.TypeProgram.Add(typeProgram);
-            await _unitOfWork.SaveAsync();
+            var result = await _unitOfWork.SaveAsync();
+            if (result > 0)
+            {
+                return Ok(typeProgram);
+            }
+            return BadRequest("Something wrong when adding");
         }
 
         [HttpPut]
         [Authorize(Roles = StaticUserRole.ADMIN)]
-        public async Task UpdateTypeProgram(TypeProgram typeProgram)
+        public async Task<ActionResult> UpdateTypeProgram([FromForm] TypeProgram typeProgram)
         {
-            _unitOfWork.TypeProgram.Update(typeProgram);
-            await _unitOfWork.SaveAsync();
+            var type = await _unitOfWork.TypeProgram.GetAsync(typeProgram.Id);
+            if(type != null)
+            {
+                type.TypeName = typeProgram.TypeName;
+                _unitOfWork.TypeProgram.Update(type);
+                var result = await _unitOfWork.SaveAsync();
+                if (result > 0)
+                {
+                    return Ok("Update successfully");
+                }
+                return BadRequest("Something wrong when updating");
+            }
+            return NotFound("Can't find type program to update");
         }
 
         [HttpDelete]
         [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult> DeleteTypeProgram(int id)
         {
-            var result = _unitOfWork.TypeProgram.Delete(id);
-            if (result == true)
+            var typeProgram = await _unitOfWork.TypeProgram.GetAsync(id);
+            if (typeProgram != null)
             {
-                await _unitOfWork.SaveAsync();
-                return Ok();
+                _unitOfWork.TypeProgram.Delete(typeProgram);
+                var result = await _unitOfWork.SaveAsync();
+                if (result > 0)
+                {
+                    return Ok("Delete successfully");
+                }
+                return BadRequest("Something wrong when deleting");
             }
-            return BadRequest();
+            return NotFound("Can't find type program to delete");
         }
     }
 }

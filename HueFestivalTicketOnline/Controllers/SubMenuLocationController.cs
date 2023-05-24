@@ -23,25 +23,46 @@ namespace HueFestivalTicketOnline.Controllers
 
         [HttpGet("{id}")]
         [AllowAnonymous]
-        public async Task<ActionResult<ViewSubMenuLocation>> GetSubMenuLocation(int id)
+        public async Task<ActionResult<SubMenuLocation>> GetSubMenuLocation(int id)
         {
             var subMenu =  await _unitOfWork.SubMenuLocation.GetAsync(id);
             if(subMenu != null) 
             {
-                return Ok(_mapper.Map<SubMenuLocation, ViewSubMenuLocation>(subMenu));
+                return Ok(subMenu);
             }
-            return NotFound("Không tìm thấy dữ liệu.");
+            return NotFound("Submenu location not exists");
         }
 
-        [HttpGet]
-        [AllowAnonymous]
+        [HttpGet("get-all-submenu")]
+        [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<List<ViewSubMenuLocation>>> GetSubMenuLocations()
         {
             var objs = await _unitOfWork.SubMenuLocation.GetAllAsync();
             List<ViewSubMenuLocation> subMenus = new List<ViewSubMenuLocation>();
-            foreach(var obj in objs)
+            if(objs != null)
             {
-                subMenus.Add(_mapper.Map<SubMenuLocation, ViewSubMenuLocation>(obj));
+                foreach (var obj in objs)
+                {
+                    subMenus.Add(_mapper.Map<SubMenuLocation, ViewSubMenuLocation>(obj));
+                }
+                return Ok(subMenus);
+            }
+            return Ok(subMenus);
+        }
+
+        [HttpGet("get-submenu-list")]
+        [AllowAnonymous]
+        public async Task<ActionResult<List<ViewSubMenuLocation>>> GetSubMenuByMenu(int menuId)
+        {
+            var listSubMenu = await _unitOfWork.SubMenuLocation.GetAllAsync(s => s.MenuLocationId == menuId);
+            List<ViewSubMenuLocation> subMenus = new List<ViewSubMenuLocation>();
+            if (listSubMenu != null)
+            {
+                foreach (var obj in listSubMenu)
+                {
+                    subMenus.Add(_mapper.Map<SubMenuLocation, ViewSubMenuLocation>(obj));
+                }
+                return Ok(subMenus);
             }
             return Ok(subMenus);
         }
@@ -50,29 +71,32 @@ namespace HueFestivalTicketOnline.Controllers
         [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<SubMenuLocation>> AddSubMenuLocation([FromForm]SubMenuLocationDTO subMenuLocation)
         {
-            
-            if (subMenuLocation.File != null)
+            if(subMenuLocation.CateName !=null && subMenuLocation.MenuLocationId != null)
             {
-                var subMenu = new SubMenuLocation();
-                string fileName = Guid.NewGuid().ToString();
-                var extension = Path.GetExtension(subMenuLocation.File.FileName);
-
-                using (var fileStream = new FileStream(Path.Combine(@"images", fileName + extension),FileMode.Create))
+                if (subMenuLocation.File != null)
                 {
-                    subMenuLocation.File.CopyTo(fileStream);
-                }
+                    var subMenu = new SubMenuLocation();
+                    string fileName = Guid.NewGuid().ToString();
+                    var extension = Path.GetExtension(subMenuLocation.File.FileName);
 
-                subMenu.ImageUrl = @"\images\" + fileName + extension;
-                _mapper.Map(subMenuLocation, subMenu);
-                _unitOfWork.SubMenuLocation.Add(subMenu);
-                await _unitOfWork.SaveAsync();
-                return Ok(subMenuLocation);
+                    using (var fileStream = new FileStream(Path.Combine(@"images", fileName + extension), FileMode.Create))
+                    {
+                        subMenuLocation.File.CopyTo(fileStream);
+                    }
+
+                    subMenu.ImageUrl = @"\images\" + fileName + extension;
+                    _mapper.Map(subMenuLocation, subMenu);
+                    _unitOfWork.SubMenuLocation.Add(subMenu);
+                    var result = await _unitOfWork.SaveAsync();
+                    if (result > 0)
+                    {
+                        return Ok(subMenu);
+                    }
+                    return BadRequest("Something wrong when adding");
+                }
+                return BadRequest("You must import image");
             }
-            else
-            {
-                return BadRequest("Bạn phải nhập ảnh");
-            }
-            
+            return BadRequest("You must fill all field");
         }
 
         [HttpPut]
@@ -83,42 +107,53 @@ namespace HueFestivalTicketOnline.Controllers
            
             if(objFromDb != null)
             {
-                string fileName = Guid.NewGuid().ToString();
-                var extension = Path.GetExtension(subMenuLocation.File.FileName);
-                if (objFromDb.ImageUrl != null)
+                if(subMenuLocation.File != null)
                 {
-                    var oldImagePath = objFromDb.ImageUrl.TrimStart('\\');
-                    if(System.IO.File.Exists(oldImagePath))
+                    string fileName = Guid.NewGuid().ToString();
+                    var extension = Path.GetExtension(subMenuLocation.File.FileName);
+                    if (objFromDb.ImageUrl != null)
                     {
-                        System.IO.File.Delete(oldImagePath);
+                        var oldImagePath = objFromDb.ImageUrl.TrimStart('\\');
+                        if (System.IO.File.Exists(oldImagePath))
+                        {
+                            System.IO.File.Delete(oldImagePath);
+                        }
                     }
-                }
-                using (var fileStream = new FileStream(Path.Combine(@"images", fileName + extension), FileMode.Create))
-                {
-                    subMenuLocation.File.CopyTo(fileStream);
-                }
+                    using (var fileStream = new FileStream(Path.Combine(@"images", fileName + extension), FileMode.Create))
+                    {
+                        subMenuLocation.File.CopyTo(fileStream);
+                    }
 
-                objFromDb.ImageUrl = @"\images\" + fileName + extension;
+                    objFromDb.ImageUrl = @"\images\" + fileName + extension;
+                }
                 _mapper.Map(subMenuLocation, objFromDb);
                 _unitOfWork.SubMenuLocation.Update(objFromDb);
-                await _unitOfWork.SaveAsync();
-                return Ok(objFromDb);
+                var result = await _unitOfWork.SaveAsync();
+                if (result > 0)
+                {
+                    return Ok("Update successfully");
+                }
+                return BadRequest("Something wrong when updating");
             }
-
-            return BadRequest("Không thể cập nhật dữ liệu");
+            return NotFound("Can't find sub menu to update");
         }
 
         [HttpDelete]
         [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<SubMenuLocation>> DeleteSubMenuLocation(int id)
         {
-            var result = _unitOfWork.SubMenuLocation.Delete(id);
-            if(result == true)
+            var subMenuLocation = await _unitOfWork.SubMenuLocation.GetAsync(id);
+            if(subMenuLocation != null)
             {
-                await _unitOfWork.SaveAsync();
-                return Ok();
+                _unitOfWork.SubMenuLocation.Delete(subMenuLocation);
+                var result = await _unitOfWork.SaveAsync();
+                if (result > 0)
+                {
+                    return Ok("Delete successfully");
+                }
+                return BadRequest("Something wrong when deleting");
             }
-            return BadRequest();
+            return NotFound("Can't find sub menu to delete");
         }
     }
 }

@@ -22,8 +22,7 @@ namespace HueFestivalTicketOnline.Controllers
             _accountRepo = accountRepo;
         }
 
-        [HttpPost]
-        [Route("seed-roles")]
+        [HttpPost("seed-roles")]
         [AllowAnonymous]
         public async Task<ActionResult> SeedRoles()
         {
@@ -34,8 +33,7 @@ namespace HueFestivalTicketOnline.Controllers
                 return Ok("Seeding is successful");
         }
 
-        [HttpPost]
-        [Route("register")]
+        [HttpPost("register")]
         [AllowAnonymous]
         public async Task<ActionResult> Register([FromBody] RegisterDTO registerDto)
         {
@@ -63,8 +61,7 @@ namespace HueFestivalTicketOnline.Controllers
             return Ok("Account create successfully");
 
         }
-        [HttpPost]
-        [Route("login")]
+        [HttpPost("login")]
         [AllowAnonymous]
         public async Task<ActionResult> Login([FromBody]LoginDTO loginDto)
         {

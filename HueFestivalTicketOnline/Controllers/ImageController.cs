@@ -25,15 +25,23 @@ namespace HueFestivalTicketOnline.Controllers
         [AllowAnonymous]
         public async Task<ActionResult> GetImage(int id)
         {
-            var objFromDb =  await _unitOfWork.Image.GetAsync(id);
+            var objFromDb = await _unitOfWork.Image.GetAsync(id);
             if (objFromDb != null)
             {
                 return Ok(objFromDb);
             }
-            return NotFound("Không tìm thấy dữ liệu");
+            return NotFound("Image not exists");
         }
 
-        [HttpGet]
+        [HttpGet("get-all-images")]
+        [AllowAnonymous]
+        public async Task<ActionResult> GetImages()
+        {
+            var objs = await _unitOfWork.Image.GetAllAsync();
+            return Ok(objs);
+        }
+
+        [HttpGet("get-image-by-program")]
         [AllowAnonymous]
         public async Task<ActionResult> GetImagesByProgramId(int id)
         {
@@ -42,26 +50,15 @@ namespace HueFestivalTicketOnline.Controllers
             {
                 return Ok(objs);
             }
-            return NotFound("Không tìm thấy lễ hội bạn yêu cầu");
+            return NotFound("Can't find image");
         }
-        /*[HttpGet("{fesName}")]
-        [AllowAnonymous]
-        public async Task<ActionResult<List<Image>>> GetImagesByProgramName(string fesName)
-        {
-            var fesProgram = await _unitOfWork.FesProgram.GetFirstOrDefaultAsync(f =>
-                f.ProgramName.Trim().ToLower().Equals(fesName.Trim().ToLower()));  
-            if(fesProgram !=null)
-            {
-                var objs = await _unitOfWork.Image.GetAllAsync(o => o.FesProgramId == fesProgram.Id);
-                return Ok(objs);
-            }
-            return NotFound("Không tìm lễ hội bạn yêu cầu");
-        }*/
+
+        
         [HttpPost]
         [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult> AddImage([FromForm]ImageDTO imageDto)
         {
-            if(imageDto.File != null)
+            if(imageDto.File != null && imageDto.FesProgramId != null)
             {
                 var image = new Image();
                 string fileName = Guid.NewGuid().ToString();
@@ -76,12 +73,16 @@ namespace HueFestivalTicketOnline.Controllers
                 image.ImageUrl = @"\images\" + fileName + extension;
                 _mapper.Map(imageDto, image);
                 _unitOfWork.Image.Add(image);
-                await _unitOfWork.SaveAsync();
-                return Ok(image);
+                var result = await _unitOfWork.SaveAsync();
+                if(result > 0)
+                {
+                    return Ok(image);
+                }
+                return BadRequest("Something wrong when adding");
             }
             else
             {
-                return BadRequest("Bạn cần nhập ảnh.");
+                return BadRequest("You must fill all field");
             }
             
         }
@@ -93,27 +94,35 @@ namespace HueFestivalTicketOnline.Controllers
             var objFromDb = await _unitOfWork.Image.GetAsync(id);
             if(objFromDb != null)
             {
-                string fileName = Guid.NewGuid().ToString();
-                var extension = Path.GetExtension(imageDto.File.FileName);
-                if (objFromDb.ImageUrl != null)
+                if(imageDto.File != null)
                 {
-                    var oldImagePath = objFromDb.ImageUrl.TrimStart('\\');
-                    if (System.IO.File.Exists(oldImagePath))
+                    string fileName = Guid.NewGuid().ToString();
+                    var extension = Path.GetExtension(imageDto.File.FileName);
+                    if (objFromDb.ImageUrl != null)
                     {
-                        System.IO.File.Delete(oldImagePath);
+                        var oldImagePath = objFromDb.ImageUrl.TrimStart('\\');
+                        if (System.IO.File.Exists(oldImagePath))
+                        {
+                            System.IO.File.Delete(oldImagePath);
+                        }
                     }
+                    using (var fileStream = new FileStream(Path.Combine(@"images", fileName + extension), FileMode.Create))
+                    {
+                        imageDto.File.CopyTo(fileStream);
+                    }
+                    objFromDb.ImageUrl = @"\images\" + fileName + extension;
                 }
-                using (var fileStream = new FileStream(Path.Combine(@"images", fileName + extension), FileMode.Create))
-                {
-                    imageDto.File.CopyTo(fileStream);
-                }
-                objFromDb.ImageUrl = @"\images\" + fileName + extension;
+                
                 _mapper.Map(imageDto, objFromDb);
                 _unitOfWork.Image.Update(objFromDb);
-                await _unitOfWork.SaveAsync();
-                return Ok(objFromDb);
+                var result = await _unitOfWork.SaveAsync();
+                if(result > 0)
+                {
+                    return Ok(objFromDb);
+                }
+                return BadRequest("Something wrong when updating");
             }
-            return NotFound("Không tìm thấy ảnh để cập nhật");
+            return NotFound("Can't find image to update");
             
         }
 
@@ -121,13 +130,19 @@ namespace HueFestivalTicketOnline.Controllers
         [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<Image>> DeleteImage(int id)
         {
-            var result = _unitOfWork.Image.Delete(id);
-            if (result == true)
+
+            var image = await _unitOfWork.Image.GetAsync(id);
+            if (image != null)
             {
-                await _unitOfWork.SaveAsync();
-                return Ok();
+                _unitOfWork.Image.Delete(image);
+                var result = await _unitOfWork.SaveAsync();
+                if (result > 0)
+                {
+                    return Ok("Delete successfully");
+                }
+                return BadRequest("Something wrong when deleting");
             }
-            return BadRequest("Không thể xoá ảnh.");
+            return BadRequest("Can't find image to delete");
         }
     }
 }

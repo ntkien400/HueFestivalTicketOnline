@@ -1,5 +1,4 @@
-﻿using HueFestivalTicketOnline.DataAccess.Data;
-using HueFestivalTicketOnline.DataAccess.Repository.IRepository;
+﻿using HueFestivalTicketOnline.DataAccess.Repository.IRepository;
 using HueFestivalTicketOnline.Models.DTOs.Authentiction;
 using HueFestivalTicketOnline.Models.Models;
 using Microsoft.AspNetCore.Identity;
@@ -76,7 +75,7 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
 
         public async Task<RegisterResult> Register(RegisterDTO registerDto)
         {
-             var registerResult = new RegisterResult();
+            var registerResult = new RegisterResult();
             var isExistUser = await _userManager.FindByNameAsync(registerDto.UserName);
             var isExistEmail = await _userManager.FindByEmailAsync(registerDto.Email);
             var validEmail = ValidateEmail(registerDto.Email);
@@ -107,6 +106,7 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
             {
                 Email = registerDto.Email,
                 UserName = registerDto.UserName,
+                PhoneNumber = registerDto.PhoneNumber,
                 SecurityStamp = Guid.NewGuid().ToString()
             };
             var createUserResult = await _userManager.CreateAsync(newUser, registerDto.Password);

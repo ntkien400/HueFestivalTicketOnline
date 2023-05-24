@@ -5,5 +5,6 @@ namespace HueFestivalTicketOnline.DataAccess.Repository.SendMailAndSms
     public interface ISendSms
     {
         MessageResource SendOtpSms(string phoneNumber, string OTP);
+        public string GenerateOTPCode(int length);
     }
 }

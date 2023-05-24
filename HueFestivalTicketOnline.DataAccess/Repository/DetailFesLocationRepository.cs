@@ -13,6 +13,17 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
         {
             _dbContext = dbContext;
         }
-        
+
+        public bool CheckDate(string s1, string s2)
+        {
+            var date1 = DateOnly.ParseExact(s1, "dd-MM-yyyy");
+            var date2 = DateOnly.ParseExact(s2, "dd-MM-yyyy");
+            var now = DateTime.Now;
+            if (date1 < DateOnly.FromDateTime(now))
+                return false;
+            if (date1 > date2)
+                return false;
+            return true;
+        }
     }
 }

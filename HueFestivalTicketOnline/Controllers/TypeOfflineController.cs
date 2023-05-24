@@ -26,7 +26,7 @@ namespace HueFestivalTicketOnline.Controllers
             {
                 return Ok(objFromDb);
             }
-            return NotFound("Không tìm thấy dữ liệu");
+            return NotFound("Type offline is not exists");
         }
 
         [HttpGet]
@@ -42,8 +42,12 @@ namespace HueFestivalTicketOnline.Controllers
         public async Task<ActionResult> AddTypeOffline(TypeOffline typeOffline)
         {
             _unitOfWork.TypeOffline.Add(typeOffline);
-            await _unitOfWork.SaveAsync();
-            return Ok("Thêm thành công");
+            var result = await _unitOfWork.SaveAsync();
+            if (result > 0)
+            {
+                return Ok(typeOffline);
+            }
+            return BadRequest("Something wrong when adding");
         }
 
         [HttpPut]
@@ -55,10 +59,14 @@ namespace HueFestivalTicketOnline.Controllers
             {
                 objFromDb.TypeName = typeOffline.TypeName;
                 _unitOfWork.TypeOffline.Update(objFromDb);
-                await _unitOfWork.SaveAsync();
-                return Ok("Cập nhật thành công");
+                var result = await _unitOfWork.SaveAsync();
+                if (result > 0)
+                {
+                    return Ok("Update successfully");
+                }
+                return BadRequest("Something wrong when updating");
             }
-            return BadRequest("Lỗi cập nhật");
+            return NotFound("Can't find type offline to upadte");
            
         }
 
@@ -66,13 +74,18 @@ namespace HueFestivalTicketOnline.Controllers
         [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult> DeleteTypeOffline(int id)
         {
-            var result = _unitOfWork.TypeOffline.Delete(id);
-            if (result == true)
+            var typeOffine = await _unitOfWork.TypeOffline.GetAsync(id);
+            if (typeOffine != null)
             {
-                await _unitOfWork.SaveAsync();
-                return Ok("Xoá thành công");
+                _unitOfWork.TypeOffline.Delete(typeOffine);
+                var result = await _unitOfWork.SaveAsync();
+                if (result > 0)
+                {
+                    return Ok("Delete successfully");
+                }
+                return BadRequest("Something wrong when deleting");
             }
-            return BadRequest("Lỗi xoá");
+            return NotFound("Can't find type offline to delete");
         }
     }
 }

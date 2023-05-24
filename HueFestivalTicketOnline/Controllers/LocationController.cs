@@ -33,6 +33,28 @@ namespace HueFestivalTicketOnline.Controllers
             return NotFound("Location not exist");
         }
 
+        [HttpGet("get-all-location")]
+        [Authorize(Roles = StaticUserRole.ADMIN)]
+        public async Task<ActionResult<List<ViewLocation>>> GetLocations(int? page_index, int? page_size)
+        {
+            if (page_index != null && page_size != null)
+            {
+                int takeobjs = page_size.Value;
+                int skipobjs = page_size.Value * (page_index.Value - 1);
+                var objFromDb = await _unitOfWork.Location.GetAllAsync(take: takeobjs, skip: skipobjs);
+                List<ViewLocation> locations = new List<ViewLocation>();
+                foreach (var obj in objFromDb)
+                {
+                    locations.Add(_mapper.Map<Location, ViewLocation>(obj));
+                }
+                return Ok(locations);
+            }
+            else
+            {
+                return Ok(new List<ViewLocation>());
+            }
+        }
+
         [HttpGet("get-location-list")]
         [AllowAnonymous]
         public async Task<ActionResult<List<ViewLocation>>> GetLocationsBySubMenu(int subMenuId, int? page_index, int? page_size)
@@ -57,7 +79,7 @@ namespace HueFestivalTicketOnline.Controllers
                     return Ok(new List<ViewLocation>());
                 }
             }
-            return BadRequest("Something went wrong when get data");
+            return NotFound("Sub menu is not exists");
         }
 
         [HttpPost]
@@ -82,8 +104,12 @@ namespace HueFestivalTicketOnline.Controllers
                 location.ImageUrl = @"\images\" + fileName + extension;
                 _mapper.Map(locationDto, location);
                 _unitOfWork.Location.Add(location);
-                await _unitOfWork.SaveAsync();
-                return Ok(location);
+                var result = await _unitOfWork.SaveAsync();
+                if(result > 0)
+                {
+                    return Ok(location);
+                }
+                return BadRequest("Something wrong when adding");
 
             }
             else
@@ -121,11 +147,17 @@ namespace HueFestivalTicketOnline.Controllers
                 }
                 _mapper.Map(locationDto, objFromDb);
                 _unitOfWork.Location.Update(objFromDb);
-                await _unitOfWork.SaveAsync();
-                return Ok(objFromDb);
+                var result = await _unitOfWork.SaveAsync();
+
+                if(result > 0)
+                {
+                    return Ok(objFromDb);
+                }
+                return BadRequest("Something wrong when updating");
+                
             }
 
-            return BadRequest("Something wrong when update data");
+            return NotFound("Can't find location to update");
 
         }
 
@@ -133,13 +165,18 @@ namespace HueFestivalTicketOnline.Controllers
         [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<Location>> DeleteLocation(int id)
         {
-            var result = _unitOfWork.Location.Delete(id);
-            if (result == true)
+            var location = await _unitOfWork.Location.GetAsync(id);
+            if (location != null)
             {
-                await _unitOfWork.SaveAsync();
-                return Ok("Delete successfully");
+                _unitOfWork.Location.Delete(location);
+                var result =  await _unitOfWork.SaveAsync();
+                if(result > 0)
+                {
+                    return Ok("Delete successfully");
+                }
+                return BadRequest("Something wrong when deleting");
             }
-            return BadRequest("Something wrong when delete data");
+            return NotFound("Can't find location to delete");
         }
     }
 }

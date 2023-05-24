@@ -4,6 +4,7 @@ using HueFestivalTicketOnline.Models.Models;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security.Principal;
 using System.Text;
@@ -11,15 +12,13 @@ using System.Threading.Tasks;
 
 namespace HueFestivalTicketOnline.DataAccess.Repository
 {
-    public class UnitOfWork : IUnitOfWork
+    public class UnitOfWork : IUnitOfWork, IDisposable
     {
         private readonly ApplicationDbContext _dbContext;
-        private readonly UserManager<Account> _userManager;
 
-        public UnitOfWork(ApplicationDbContext dbContext, UserManager<Account> userManager)
+        public UnitOfWork(ApplicationDbContext dbContext)
         {
             _dbContext = dbContext;
-            _userManager = userManager;
             TypeProgram = new TypeProgramRepository(_dbContext);
             TypeOffline = new TypeOfflineRepository(_dbContext);
             Image = new ImageRepository(_dbContext);
@@ -34,6 +33,7 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
             User = new UserRepository(_dbContext);
             News = new NewsRepository(_dbContext);
             HistoryCheck = new HistoryCheckRepository(_dbContext);
+            AboutInformation = new AboutInformationRepository(_dbContext);
             Account = new AccountRepository(_dbContext);
         }
 
@@ -51,15 +51,24 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
         public IUserRepository User { get; private set; }
         public INewsRepository News { get; private set; }
         public IHistoryCheckRepository HistoryCheck { get; private set; }
+        public IAboutInformationRepository AboutInformation { get; private set; }
         public IAccountRepository Account { get; private set; }
+        public UserManager<Account> UserManager { get; private set; }
+
+        public void Dispose()
+        {
+            _dbContext.Dispose();
+        }
+
         public async Task DisposeAsync()
         {
             await _dbContext.DisposeAsync();
         }
 
-        public async Task SaveAsync()
+        public async Task<int> SaveAsync()
         {
-            await _dbContext.SaveChangesAsync();
+           var count = await _dbContext.SaveChangesAsync();
+           return count;
         }
     }
 }

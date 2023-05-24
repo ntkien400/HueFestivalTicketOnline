@@ -22,27 +22,27 @@ namespace HueFestivalTicketOnline.Controllers
         }
 
         [HttpGet("{id}")]
-        [AllowAnonymous]
+        [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<InvoiceTicket>> GetInvoiceTicket(string id)
         {
-            var detailFes = await _unitOfWork.InvoiceTicket.GetFirstOrDefaultAsync(d => d.Id.ToString().Equals(id), includesProperties: "User,FesTypeTicket"); 
+            var detailFes = await _unitOfWork.InvoiceTicket.GetFirstOrDefaultAsync(d => d.Id.ToString() == id, includesProperties: "User,FesTypeTicket"); 
             if(detailFes == null)
             {
-                return NotFound("Không tìm thấy dữ liệu.");
+                return NotFound("Invoice is not exists");
             }
             return Ok(detailFes);
         }
 
-        [HttpGet]
+        [HttpGet("get-all-invoices")]
         [Authorize(Roles = StaticUserRole.ADMIN)]
-        public async Task<ActionResult<List<InvoiceTicket>>> GetInvoiceTickets(string? Date, string? numberphone)
+        public async Task<ActionResult<List<InvoiceTicket>>> GetInvoiceTickets()
         {
             var objs = await _unitOfWork.InvoiceTicket.GetAllAsync(includesProperties:"FesProgram,Location");
             return Ok(objs);
         }
 
         [HttpPost]
-        [AllowAnonymous]
+        [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<CreateInvoiceTicketDTO>> AddInvoiceTicket(CreateInvoiceTicketDTO createInvoiceTicketDto)
         {
             InvoiceTicket invoiceTicket = new InvoiceTicket();
@@ -50,7 +50,7 @@ namespace HueFestivalTicketOnline.Controllers
             var fesTypeTicket = await _unitOfWork.FesTypeTicket.GetAsync(createInvoiceTicketDto.FesTypeTicketId);
             if(fesTypeTicket == null)
             {
-                return BadRequest("Typeticket is wrong");
+                return NotFound("Typeticket not exists");
             }
             //Check ticket amount
             var resultamount = _unitOfWork.FesTypeTicket.CheckTicketAmount(fesTypeTicket);
@@ -73,14 +73,18 @@ namespace HueFestivalTicketOnline.Controllers
             invoiceTicket.UserId = Guid.Parse(userId);
             _unitOfWork.InvoiceTicket.Add(invoiceTicket);
             //Update ticket amount
-            bool result = _unitOfWork.FesTypeTicket.UpdateTicketAmount(fesTypeTicket, createInvoiceTicketDto.Quantity);
-            if(!result)
+            bool resultUpdateTicketAmount = _unitOfWork.FesTypeTicket.UpdateTicketAmount(fesTypeTicket, createInvoiceTicketDto.Quantity);
+            if(!resultUpdateTicketAmount)
             {
                 return BadRequest("Quantity exceeds existing tickets");
             }
 
-            await _unitOfWork.SaveAsync();
-            return Ok("Mua vé thành công.");
+            var result =  await _unitOfWork.SaveAsync();
+            if(result > 0)
+            {
+                return Ok("Create ticket successfully");
+            }
+            return BadRequest("Something wrong when adding");
         }
 
         [HttpPut]
@@ -92,10 +96,14 @@ namespace HueFestivalTicketOnline.Controllers
             {
                 _mapper.Map(updateDetail, objFromDb);
                 _unitOfWork.InvoiceTicket.Update(objFromDb);
-                await _unitOfWork.SaveAsync();
-                return Ok(updateDetail);
+                var result = await _unitOfWork.SaveAsync();
+                if(result > 0)
+                {
+                    return Ok(updateDetail);
+                }
+                return BadRequest("Something wrong when updating");
             }
-            return BadRequest("Không thể cập nhật.");
+            return NotFound("Invoice not exists");
             
         }
 
@@ -103,13 +111,18 @@ namespace HueFestivalTicketOnline.Controllers
         [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<InvoiceTicket>> DeleteInvoiceTicket(int id)
         {
-            var result = _unitOfWork.InvoiceTicket.Delete(id);
-            if(result == true)
+            var invoice = await _unitOfWork.InvoiceTicket.GetAsync(id);
+            if(invoice != null)
             {
-                await _unitOfWork.SaveAsync();
-                return Ok();
+                _unitOfWork.InvoiceTicket.Delete(invoice);
+                var result = await _unitOfWork.SaveAsync();
+                if(result > 0)
+                {
+                    return Ok("Delete successfully");
+                }
+                return BadRequest("Something wrong when deleting");
             }
-            return BadRequest("Không thể xoá dữ liệu.");
+            return NotFound("Invoice not exists");
         }
     }
 }

@@ -39,24 +39,43 @@ namespace HueFestivalTicketOnline.Controllers
                 viewFes.DetailList = detail;
                 return Ok(viewFes);
             }
-            return NotFound("Không tìm thấy dữ liệu.");
+            return NotFound("Fes program not exists");
         }
 
-        [HttpGet]
-        [AllowAnonymous]
+        [HttpGet("get-all-fes-program")]
+        [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<List<FesProgram>>> GetFesPrograms()
         {
             var objs = await _unitOfWork.FesProgram.GetAllAsync();
             return Ok(objs);
         }
 
+        [HttpGet("get-fes-program-list")]
+        [Authorize(Roles = StaticUserRole.ADMIN)]
+        public async Task<ActionResult<List<FesProgram>>> GetFesProgramsByTypeProgram(int typeId)
+        {
+            var fesPrograms = await _unitOfWork.FesProgram.GetAllAsync(f => f.TypeProgramId == typeId);
+            return Ok(fesPrograms);
+        }
+
         [HttpPost]
         [Authorize(Roles =StaticUserRole.ADMIN)]
         public async Task<ActionResult<FesProgram>> AddFesProgram(FesProgramDTO fesProgram)
         {
-            _unitOfWork.FesProgram.Add(_mapper.Map<FesProgramDTO, FesProgram>(fesProgram));
-            await _unitOfWork.SaveAsync();
-            return Ok("Thêm thành công");
+            var checkFieldNull = fesProgram.GetType().GetProperties()
+                            .Select(f => f.GetValue(fesProgram))
+                            .Any(value => value != null);
+            if(!checkFieldNull)
+            {
+                _unitOfWork.FesProgram.Add(_mapper.Map<FesProgramDTO, FesProgram>(fesProgram));
+                var result = await _unitOfWork.SaveAsync();
+                if (result > 0)
+                {
+                    return Ok("Thêm thành công");
+                }
+                return BadRequest("Something wrong when adding");
+            }
+            return BadRequest("You must fill all field");
         }
         
         [HttpPut]
@@ -68,23 +87,32 @@ namespace HueFestivalTicketOnline.Controllers
             {
                 _mapper.Map(fesProgram, objFromDb);
                 _unitOfWork.FesProgram.Update(objFromDb);
-                await _unitOfWork.SaveAsync();
-                return Ok(objFromDb);
+                var result = await _unitOfWork.SaveAsync();
+                if(result > 0)
+                {
+                    return Ok("Update successfully");
+                }
+                return BadRequest("Something wrong when updating");
             }
-            return BadRequest("Không thể cập nhật.");
+            return NotFound("Can't find fes program to update");
         }
 
         [HttpDelete]
         [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<Location>> DeleteFesProgram(int id)
         {
-            var result = _unitOfWork.FesProgram.Delete(id);
-            if (result == true)
+            var fesProgram = await _unitOfWork.FesProgram.GetAsync(id);
+            if (fesProgram != null)
             {
-                await _unitOfWork.SaveAsync();
-                return Ok();
+                _unitOfWork.FesProgram.Delete(fesProgram);
+                var result = await _unitOfWork.SaveAsync();
+                if (result > 0)
+                {
+                    return Ok("Delete successfully");
+                }
+                return BadRequest("Something wrong when deleting");
             }
-            return BadRequest("Không thể xoá dữ liệu.");
+            return NotFound("Can't find fes program to delete");
         }
     }
 }

@@ -21,23 +21,22 @@ namespace HueFestivalTicketOnline.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("get-menu")]
         [AllowAnonymous]
         public async Task<ActionResult<MenuLocationDTO>> GetMenuLocation(int id)
         {
             MenuLocationDTO menuLocation = new MenuLocationDTO();
-            var menu =  await _unitOfWork.MenuLocation.GetAsync(id);
-            var submenus = await _unitOfWork.SubMenuLocation.GetAllAsync(s => s.MenuLocationId == id);
-            menuLocation.MenuId = menu.Id;
-            menuLocation.MenuTitle = menu.MenuTitle;
-            foreach(SubMenuLocation sub in submenus)
+            var menu = await _unitOfWork.MenuLocation.GetAsync(id);
+            if(menu != null)
             {
-                menuLocation.SubMenus.Add(_mapper.Map<SubMenuLocation, ViewSubMenuLocation>(sub));
+                menuLocation.MenuId = menu.Id;
+                menuLocation.MenuTitle = menu.MenuTitle;
+                return Ok(menuLocation);
             }
-            return Ok(menuLocation);
+            return NotFound("Menu location not exists");
         }
 
-        [HttpGet]
+        [HttpGet("get-all-menu")]
         [AllowAnonymous]
         public async Task<ActionResult<List<MenuLocation>>> GetMenuLocations()
         {
@@ -47,38 +46,52 @@ namespace HueFestivalTicketOnline.Controllers
 
         [HttpPost]
         [Authorize(Roles = StaticUserRole.ADMIN)]
-        public async Task<ActionResult<MenuLocation>> AddMenuLocation(MenuLocation menuLocation)
+        public async Task<ActionResult<MenuLocation>> AddMenuLocation([FromForm]MenuLocation menuLocation)
         {
             _unitOfWork.MenuLocation.Add(menuLocation);
-            await _unitOfWork.SaveAsync();
-            return Ok(menuLocation);
+            var result = await _unitOfWork.SaveAsync();
+            if (result > 0)
+            {
+                return Ok(menuLocation);
+            }
+            return BadRequest("Something wrong when adding");
         }
 
         [HttpPut]
         [Authorize(Roles = StaticUserRole.ADMIN)]
-        public async Task<ActionResult<MenuLocation>> UpdateMenuLocation(MenuLocation menuLocation)
+        public async Task<ActionResult<MenuLocation>> UpdateMenuLocation([FromForm]MenuLocation menuLocation)
         {
             var objfromDb = await _unitOfWork.MenuLocation.GetAsync(menuLocation.Id);
             if(objfromDb != null)
             {
-                _unitOfWork.MenuLocation.Update(menuLocation);
-                await _unitOfWork.SaveAsync();
-                return Ok(menuLocation);
+                objfromDb.MenuTitle = menuLocation.MenuTitle;
+                _unitOfWork.MenuLocation.Update(objfromDb);
+                var result = await _unitOfWork.SaveAsync();
+                if (result > 0)
+                {
+                    return Ok("Update successfully");
+                }
+                return BadRequest("Something wrong when updating");
             }
-            return NotFound("Không tìm thấy dữ liệu.");
+            return NotFound("Menu is not exists");
         }
 
         [HttpDelete]
         [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<MenuLocation>> DeleteMenuLocation(int id)
         {
-            var result = _unitOfWork.MenuLocation.Delete(id);
-            if(result == true)
+            var menuLocation = await _unitOfWork.MenuLocation.GetAsync(id);
+            if(menuLocation != null)
             {
-                await _unitOfWork.SaveAsync();
-                return Ok();
+                _unitOfWork.MenuLocation.Delete(menuLocation);
+                var result = await _unitOfWork.SaveAsync();
+                if (result > 0)
+                {
+                    return Ok("Delete successfully");
+                }
+                return BadRequest("Something wrong when deleting");
             }
-            return BadRequest("Không tìm thấy dữ liệu để xoá.");
+            return NotFound("Menu is not exists");
         }
     }
 }

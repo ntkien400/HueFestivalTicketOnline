@@ -28,7 +28,7 @@ namespace HueFestivalTicketOnline.Controllers
             var detailFes = await _unitOfWork.Ticket.GetAsync(id);
             if (detailFes == null)
             {
-                return NotFound("Không tìm thấy dữ liệu.");
+                return NotFound("Ticket not exists");
             }
             return Ok(detailFes);
         }
@@ -59,7 +59,7 @@ namespace HueFestivalTicketOnline.Controllers
             for (int i = 0; i < invoice.Quantity; i++)
             {
                 var ticket = new Ticket();
-                ticket.TicketCode = GenerateTicketCode(12);
+                ticket.TicketCode = _unitOfWork.Ticket.GenerateTicketCode(12);
                 ticket.DateCreated = DateTime.Now;
                 ticket.DateExpried = DateTime.Parse(programDetail.EndDate);
                 ticket.TicketInfo = programDetail.FesProgram.ProgramName
@@ -75,58 +75,46 @@ namespace HueFestivalTicketOnline.Controllers
                 listInfo.Add(ticket.TicketInfo);
             }
             _unitOfWork.Ticket.AddRange(listTicket);
-            await _unitOfWork.SaveAsync();
-            await _sendEmail.SendEmailAsync(invoice.User.Email, listInfo);
-            return Ok("Create ticket successfuly and sent to user email");
+            var result = await _unitOfWork.SaveAsync();
+            if(result > 0)
+            {
+                await _sendEmail.SendEmailAsync(invoice.User.Email, listInfo);
+                return Ok("Create ticket successfuly and sent to user email");
+            }
+            return BadRequest("Someting wrong when adding");
         }
-        /*
-                [HttpPut]
-                public async Task<ActionResult<CreateTicketDTO>> UpdateTicket(CreateTicketDTO updateTicket, int id)
-                {
-                    var objFromDb = await _unitOfWork.Ticket.GetAsync(id);
-                    if (objFromDb != null)
-                    {
-                        _mapper.Map(updateTicket, objFromDb);
-                        _unitOfWork.Ticket.Update(objFromDb);
-                        await _unitOfWork.SaveAsync();
-                        return Ok(updateTicket);
-                    }
-                    return BadRequest("Không thể cập nhật.");
 
-                }
-        */
+        //[HttpPut]
+        //public async Task<ActionResult<CreateTicketDTO>> UpdateTicket(CreateTicketDTO updateTicket, int id)
+        //{
+        //    var objFromDb = await _unitOfWork.Ticket.GetAsync(id);
+        //    if (objFromDb != null)
+        //    {
+        //        _mapper.Map(updateTicket, objFromDb);
+        //        _unitOfWork.Ticket.Update(objFromDb);
+        //        await _unitOfWork.SaveAsync();
+        //        return Ok(updateTicket);
+        //    }
+        //    return BadRequest("Không thể cập nhật.");
+
+        //}
+
         [HttpDelete]
         [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<Ticket>> DeleteTicket(int id)
         {
-            var result = _unitOfWork.Ticket.Delete(id);
-            if (result == true)
+            var ticket = await _unitOfWork.Ticket.GetAsync(id);
+            if (ticket != null)
             {
-                await _unitOfWork.SaveAsync();
-                return Ok();
-            }
-            return BadRequest("Không thể xoá dữ liệu.");
-        }
-
-        private string GenerateTicketCode(int length)
-        {
-            const string valid = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-            StringBuilder sb = new StringBuilder();
-            using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
-            {
-                byte[] uintBuffer = new byte[sizeof(uint)];
-
-                while (length-- > 0)
+                _unitOfWork.Ticket.Delete(ticket);
+                var result = await _unitOfWork.SaveAsync();
+                if(result > 0)
                 {
-                    rng.GetBytes(uintBuffer);
-                    uint num = BitConverter.ToUInt32(uintBuffer, 0);
-                    sb.Append(valid[(int)(num % (uint)valid.Length)]);
+                    return Ok("Delete successfully");
                 }
+                return BadRequest("Someting wrong when deleting");
             }
-
-            return sb.ToString();
+            return NotFound("Can't find ticket to delete");
         }
-
-        
     }
 }

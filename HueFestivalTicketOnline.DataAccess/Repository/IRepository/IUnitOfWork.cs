@@ -1,4 +1,6 @@
-﻿using System;
+﻿using HueFestivalTicketOnline.Models.Models;
+using Microsoft.AspNetCore.Identity;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,9 +23,11 @@ namespace HueFestivalTicketOnline.DataAccess.Repository.IRepository
         ITicketRepository Ticket { get; }
         IUserRepository User { get; }
         INewsRepository News { get; }
-        IHistoryCheckRepository HistoryCheck {get;}
+        IHistoryCheckRepository HistoryCheck { get; }
+        IAboutInformationRepository AboutInformation { get; }
         IAccountRepository Account { get; }
+        UserManager<Account> UserManager {get;}
         Task DisposeAsync();
-        Task SaveAsync();
+        Task<int> SaveAsync();
     }
 }

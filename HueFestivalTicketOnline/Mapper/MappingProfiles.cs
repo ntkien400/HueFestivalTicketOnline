@@ -7,17 +7,32 @@ namespace HueFestivalTicketOnline.Mapper
     {
         public MappingProfiles()
         {
-            CreateMap<ImageDTO, Image>().ReverseMap();
-            CreateMap<FesProgramDTO, FesProgram>().ReverseMap();
-            CreateMap<CreateLocationDTO, Location>().ReverseMap();  
-            CreateMap<SubMenuLocationDTO, SubMenuLocation>().ReverseMap();
-            CreateMap<ViewSubMenuLocation, SubMenuLocation>().ReverseMap();
-            CreateMap<ViewLocation, Location>().ReverseMap();
-            CreateMap<ViewFesProgram, FesProgram>().ReverseMap();
-            CreateMap<DetailFesLocation, CreateDetailFesLocationDTO>().ReverseMap();
-            CreateMap<FesTypeTicketDTO, FesTypeTicket>();
-            CreateMap<CreateInvoiceTicketDTO, User>();
-            CreateMap<CreateNewsDTO, News>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            CreateMap<ImageDTO, Image>().ForAllMembers(opts => 
+                opts.Condition((src, dest, srcMember) => srcMember != null)); ;
+            CreateMap<FesProgramDTO, FesProgram>().ForAllMembers(opts =>
+                opts.Condition((src, dest, srcMember) => srcMember != null)); ;
+            CreateMap<CreateLocationDTO, Location>().ForAllMembers(opts =>
+                opts.Condition((src, dest, srcMember) => srcMember != null)); ;  
+            CreateMap<SubMenuLocationDTO, SubMenuLocation>().ForAllMembers(opts =>
+                opts.Condition((src, dest, srcMember) => srcMember != null));
+            CreateMap<ViewSubMenuLocation, SubMenuLocation>().ForAllMembers(opts =>
+                opts.Condition((src, dest, srcMember) => srcMember != null)); ;
+            CreateMap<ViewLocation, Location>().ForAllMembers(opts =>
+                opts.Condition((src, dest, srcMember) => srcMember != null)); ;
+            CreateMap<ViewFesProgram, FesProgram>().ForAllMembers(opts =>
+                opts.Condition((src, dest, srcMember) => srcMember != null)); ;
+            CreateMap<DetailFesLocation, CreateDetailFesLocationDTO>().ForAllMembers(opts =>
+                opts.Condition((src, dest, srcMember) => srcMember != null)); ;
+            CreateMap<FesTypeTicketDTO, FesTypeTicket>().ForAllMembers(opts =>
+                opts.Condition((src, dest, srcMember) => srcMember != null)); ;
+            CreateMap<CreateInvoiceTicketDTO, User>().ForAllMembers(opts =>
+                opts.Condition((src, dest, srcMember) => srcMember != null)); ;
+            CreateMap<CreateNewsDTO, News>().ForAllMembers(opts =>
+                opts.Condition((src, dest, srcMember) => srcMember != null));
+            CreateMap<ChangeInfoAccount, Account>().ForAllMembers(opts =>
+                opts.Condition((src, dest, srcMember) => srcMember != null));
+            CreateMap<AboutInformationDTO, AboutInformation>().ForAllMembers(opts =>
+                opts.Condition((src, dest, srcMember) => srcMember != null));
         }
     }
 }

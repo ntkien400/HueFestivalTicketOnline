@@ -25,7 +25,6 @@ namespace HueFestivalTicketOnline.DataAccess.Repository.IRepository
         void Add(T entity);
         void AddRange(IEnumerable<T> entities);
         void Delete(T entity);
-        bool Delete(int id);
         void Update(T entity);
 
 

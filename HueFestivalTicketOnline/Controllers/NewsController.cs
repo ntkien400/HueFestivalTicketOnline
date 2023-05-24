@@ -26,10 +26,10 @@ namespace HueFestivalTicketOnline.Controllers
         [AllowAnonymous]
         public async Task<ActionResult<News>> GetNews(int id)
         {
-            var subMenu =  await _unitOfWork.News.GetAsync(id);
-            if(subMenu != null) 
+            var news =  await _unitOfWork.News.GetAsync(id);
+            if(news != null) 
             {
-                return Ok(subMenu);
+                return Ok(news);
             }
             return NotFound("Data is not exist");
         }
@@ -40,15 +40,12 @@ namespace HueFestivalTicketOnline.Controllers
         {
             if(page_size != null && page_index != null)
             {
-                int takeobjs = page_size.Value;
-                int skipobjs = page_size.Value * (page_index.Value - 1);
-                var objs = await _unitOfWork.News.GetAllAsync(take: takeobjs, skip: skipobjs);
+                int takeitems = page_size.Value;
+                int skipitems = page_size.Value * (page_index.Value - 1);
+                var objs = await _unitOfWork.News.GetAllAsync(take: takeitems, skip: skipitems);
                 return Ok(objs);
             }
-            else
-            {
-                return Ok(new List<News>());
-            }
+            return Ok(new List<News>());
             
             
         }
@@ -71,17 +68,19 @@ namespace HueFestivalTicketOnline.Controllers
 
                 news.ImageUrl = @"\images\" + fileName + extension;
                 news.DateCreated = DateTime.Now;
+                news.DateChanged = DateTime.Now;
                 var AccountId = HttpContext.User.Claims.First(i => i.Type == ClaimTypes.NameIdentifier).Value;
                 news.AccountId = AccountId;
                 _mapper.Map(newsDto, news);
                 _unitOfWork.News.Add(news);
-                await _unitOfWork.SaveAsync();
-                return Ok(news);
+                var result = await _unitOfWork.SaveAsync();
+                if (result > 0)
+                {
+                    return Ok(news);
+                }
+                return BadRequest("Something wrong when adding");
             }
-            else
-            {
-                return BadRequest("You must fill all information");
-            }
+            return BadRequest("You must fill all information");
             
         }
 
@@ -115,24 +114,33 @@ namespace HueFestivalTicketOnline.Controllers
                 objFromDb.DateChanged = DateTime.Now;
                 _mapper.Map(newsDto, objFromDb);
                 _unitOfWork.News.Update(objFromDb);
-                await _unitOfWork.SaveAsync();
-                return Ok(objFromDb);
+                var result = await _unitOfWork.SaveAsync();
+                if (result > 0)
+                {
+                    return Ok("Update successfully");
+                }
+                return BadRequest("Something wrong when updating");
             }
 
-            return BadRequest("Something wrong when upadte data");
+            return NotFound("Can't find news to update");
         }
 
         [HttpDelete]
         [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<News>> DeleteNews(int id)
         {
-            var result = _unitOfWork.News.Delete(id);
-            if(result == true)
+            var news = await _unitOfWork.News.GetAsync(id);
+            if(news != null)
             {
-                await _unitOfWork.SaveAsync();
-                return Ok();
+                _unitOfWork.News.Delete(news);
+                var result = await _unitOfWork.SaveAsync();
+                if (result > 0)
+                {
+                    return Ok("Delete successfully");
+                }
+                return BadRequest("Something wrong when deleting");
             }
-            return BadRequest("Some thing wrong when delete");
+            return NotFound("Can't find news to delete");
         }
     }
 }

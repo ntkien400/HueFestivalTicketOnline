@@ -33,8 +33,20 @@ namespace HueFestivalTicketOnline.Controllers
             return Ok(detailFes);
         }
 
-        [HttpGet]
+        [HttpGet("get-detail-fes-program-by-fes-program")]
         [AllowAnonymous]
+        public async Task<ActionResult<DetailFesLocation>> GetDetailFesLocationByFesProgram(int fesProgramId)
+        {
+            var detailFes = await _unitOfWork.DetailFesLocation.GetFirstOrDefaultAsync(d => d.FesId == fesProgramId);
+            if (detailFes == null)
+            {
+                return NotFound("Data not exists");
+            }
+            return Ok(detailFes);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<List<DetailFesLocation>>> GetDetailFesLocations()
         {
             var objs = await _unitOfWork.DetailFesLocation.GetAllAsync(includesProperties:"FesProgram,Location");
@@ -45,14 +57,25 @@ namespace HueFestivalTicketOnline.Controllers
         [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<CreateDetailFesLocationDTO>> AddDetailFesLocation(CreateDetailFesLocationDTO createDetail)
         {
-            var result = CheckDate(createDetail.StartDate, createDetail.EndDate);
-            if(!result)
+            var checkFieldNull = createDetail.GetType().GetProperties()
+                                .Select(crd => crd.GetValue(createDetail))
+                                .Any(value => value != null);
+            if(!checkFieldNull)
             {
-                return BadRequest("Date invalid");
+                var checkDate = _unitOfWork.DetailFesLocation.CheckDate(createDetail.StartDate, createDetail.EndDate);
+                if (!checkDate)
+                {
+                    return BadRequest("Date invalid");
+                }
+                _unitOfWork.DetailFesLocation.Add(_mapper.Map<CreateDetailFesLocationDTO, DetailFesLocation>(createDetail));
+                var result = await _unitOfWork.SaveAsync();
+                if(result > 0)
+                {
+                    return Ok(createDetail);
+                }
+                return BadRequest("Something wrong when adding");
             }
-            _unitOfWork.DetailFesLocation.Add(_mapper.Map<CreateDetailFesLocationDTO, DetailFesLocation>(createDetail));
-            await _unitOfWork.SaveAsync();
-            return Ok(createDetail);
+            return BadRequest("You must fill all field");
         }
 
         [HttpPut]
@@ -64,10 +87,14 @@ namespace HueFestivalTicketOnline.Controllers
             {
                 _mapper.Map(updateDetail, objFromDb);
                 _unitOfWork.DetailFesLocation.Update(objFromDb);
-                await _unitOfWork.SaveAsync();
-                return Ok(updateDetail);
+                var result = await _unitOfWork.SaveAsync();
+                if (result > 0)
+                {
+                    return Ok("Update successfully");
+                }
+                return BadRequest("Something wrong when updating");
             }
-            return BadRequest("Something wrong when update");
+            return NotFound("Can't find to update");
             
         }
 
@@ -75,24 +102,19 @@ namespace HueFestivalTicketOnline.Controllers
         [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<DetailFesLocation>> DeleteDetailFesLocation(int id)
         {
-            var result = _unitOfWork.DetailFesLocation.Delete(id);
-            if(result == true)
+            var detailFesLocation = await _unitOfWork.DetailFesLocation.GetAsync(id);
+            if(detailFesLocation != null)
             {
-                await _unitOfWork.SaveAsync();
-                return Ok();
+                var result = await _unitOfWork.SaveAsync();
+                if (result > 0)
+                {
+                    return Ok("Delete successfully");
+                }
+                return BadRequest("Something wrong when deleting");
             }
-            return BadRequest("Something wrong when delete");
+            return NotFound("Can't find to delete");
         }
-        private bool CheckDate(string s1, string s2)
-        {
-            var date1 = DateOnly.ParseExact(s1,"dd-MM-yyyy");
-            var date2 = DateOnly.ParseExact(s2, "dd-MM-yyyy");
-            var now = DateTime.Now;
-            if (date1 < DateOnly.FromDateTime(now))
-                return false;
-            if (date1 > date2)
-                return false;
-            return true;
-        }
+
+        
     }
 }

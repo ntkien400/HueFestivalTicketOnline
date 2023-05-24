@@ -79,7 +79,7 @@ namespace HueFestivalTicketOnline.Controllers
                     historyCheck.Status = false;
                     _unitOfWork.HistoryCheck.Add(historyCheck);
                     await _unitOfWork.SaveAsync(); 
-                    return BadRequest("Ticket is expired");
+                    return BadRequest("Ticket invalid");
                 }
                 if(ticket.FesTypeTicket.FesProgramId != programId)
                 {
@@ -102,7 +102,7 @@ namespace HueFestivalTicketOnline.Controllers
             }
             else
             {
-                return BadRequest("Ticket not exists");
+                return NotFound("Ticket not exists");
             }
             
         }
@@ -127,13 +127,18 @@ namespace HueFestivalTicketOnline.Controllers
         [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<HistoryCheck>> DeleteHistoryCheck(int id)
         {
-            var result = _unitOfWork.HistoryCheck.Delete(id);
-            if (result == true)
+            var history = await _unitOfWork.HistoryCheck.GetAsync(id);
+            if (history != null)
             {
-                await _unitOfWork.SaveAsync();
-                return Ok();
+                _unitOfWork.HistoryCheck.Delete(history);
+                var result = await _unitOfWork.SaveAsync();
+                if(result > 0)
+                {
+                    return Ok("Delete successfully");
+                }
+                return BadRequest("Something wrong when deleting");
             }
-            return BadRequest("Something wrong when delete");
+            return NotFound("Can't find history to delete");
         }
 
     }

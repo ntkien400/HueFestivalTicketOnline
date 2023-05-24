@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace HueFestivalTicketOnline.DataAccess.Repository.IRepository
 {
-    public interface IDetailFesLocationRepository : IGenericRepository<DetailFesLocation>
+    public interface IAboutInformationRepository : IGenericRepository<AboutInformation>
     {
-        public bool CheckDate(string s1, string s2);
+        
     }
 }

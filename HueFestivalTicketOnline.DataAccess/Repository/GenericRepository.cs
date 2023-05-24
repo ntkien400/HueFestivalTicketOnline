@@ -27,17 +27,6 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
              dbSet.Remove(entity);
         }
 
-        public bool Delete(int id)
-        {
-            T entity = dbSet.Find(id);
-            if(entity != null)
-            {
-                Delete(entity);
-                return true;
-            }
-            return false;
-        }
-
         public async Task<T> GetAsync(int id)
         {
             return await dbSet.FindAsync(id);
