@@ -2,23 +2,21 @@
 using HueFestivalTicketOnline.DataAccess.Repository.IRepository;
 using HueFestivalTicketOnline.Models.Models;
 using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Security.Principal;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace HueFestivalTicketOnline.DataAccess.Repository
 {
     public class UnitOfWork : IUnitOfWork, IDisposable
     {
         private readonly ApplicationDbContext _dbContext;
+        private readonly UserManager<Account> _userManager;
+        private readonly IConfiguration _configuration;
 
-        public UnitOfWork(ApplicationDbContext dbContext)
+        public UnitOfWork(ApplicationDbContext dbContext, UserManager<Account> userManager, IConfiguration configuration)
         {
             _dbContext = dbContext;
+            _userManager = userManager;
+            _configuration = configuration;
             TypeProgram = new TypeProgramRepository(_dbContext);
             TypeOffline = new TypeOfflineRepository(_dbContext);
             Image = new ImageRepository(_dbContext);
@@ -34,7 +32,7 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
             News = new NewsRepository(_dbContext);
             HistoryCheck = new HistoryCheckRepository(_dbContext);
             AboutInformation = new AboutInformationRepository(_dbContext);
-            Account = new AccountRepository(_dbContext);
+            Account = new AccountRepository(_dbContext, _userManager, _configuration);
         }
 
         public ITypeProgramRepository TypeProgram { get; private set; }

@@ -38,126 +38,37 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
             return true;
         }
 
-        public async Task<LoginResult> Login(LoginDTO loginDto)
+        public async Task<bool> MakeAdmin(UpdateRolesDTO updateRolesDto)
         {
-            var loginResult = new LoginResult();
-            var user = await _userManager.FindByNameAsync(loginDto.UserName);
-            if (user != null)
-            {
-                loginResult.CheckUserName = true;
-                var isPasswordCorrect = await _userManager.CheckPasswordAsync(user, loginDto.Password);
-                if (isPasswordCorrect)
-                {
-                    loginResult.CheckPassword = true;
-                    var userRoles = await _userManager.GetRolesAsync(user);
-                    var authClaims = new List<Claim>
-                    {
-                        new Claim(ClaimTypes.Name, user.UserName),
-                        new Claim(ClaimTypes.NameIdentifier, user.Id),
-                        new Claim("JWTID", Guid.NewGuid().ToString())
-                    };
-
-                    foreach (var userRole in userRoles)
-                    {
-                        authClaims.Add(new Claim(ClaimTypes.Role, userRole));
-                    }
-
-                    var token = GenerateNewJWT(authClaims);
-                    loginResult.Token = token;
-                    return loginResult;
-                }
-                loginResult.CheckPassword = false;
-                return loginResult;
-            }
-            loginResult.CheckUserName = false;
-            return loginResult;
-        }
-
-        public async Task<RegisterResult> Register(RegisterDTO registerDto)
-        {
-            var registerResult = new RegisterResult();
-            var isExistUser = await _userManager.FindByNameAsync(registerDto.UserName);
-            var isExistEmail = await _userManager.FindByEmailAsync(registerDto.Email);
-            var validEmail = ValidateEmail(registerDto.Email);
-            var validPhone = ValidatePhone(registerDto.PhoneNumber);
-
-            if (isExistUser != null)
-            {
-                registerResult.isExistUser = true;
-                return registerResult;
-            }
-            if (isExistEmail != null)
-            {
-                registerResult.isExistEmail = true;
-                return registerResult;
-            }
-            if (!validEmail)
-            {
-                registerResult.validEmail = false;
-                return registerResult;
-            }
-            if (!validPhone)
-            {
-                registerResult.validPhone = false;
-                return registerResult;
-            }
-
-            Account newUser = new Account()
-            {
-                Email = registerDto.Email,
-                UserName = registerDto.UserName,
-                PhoneNumber = registerDto.PhoneNumber,
-                SecurityStamp = Guid.NewGuid().ToString()
-            };
-            var createUserResult = await _userManager.CreateAsync(newUser, registerDto.Password);
-            if (!createUserResult.Succeeded)
-            {
-                var errors = "Create user fail beacause:";
-                foreach (var error in createUserResult.Errors)
-                {
-                    errors += "#" + error.Description;
-                }
-                registerResult.CreateUserResult = false;
-                registerResult.errors = errors;
-            }
-            if (newUser.UserName.Equals("admin"))
-            {
-                await _userManager.AddToRoleAsync(newUser, StaticUserRole.ADMIN);
-            }
-            await _userManager.AddToRoleAsync(newUser, StaticUserRole.USER);
-            registerResult.CreateUserResult = true;
-            return registerResult;
-        }
-
-        private string GenerateNewJWT(List<Claim> authClaims)
-        {
-            var authSerect = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
-            var tokenObject = new JwtSecurityToken(
-                    issuer: _configuration["JWT:ValidIssuer"],
-                    audience: _configuration["JWT:ValidAudience"],
-                    expires: DateTime.Now.AddHours(2),
-                    claims: authClaims,
-                    signingCredentials: new SigningCredentials(authSerect, SecurityAlgorithms.HmacSha512Signature)
-                );
-            string token = new JwtSecurityTokenHandler().WriteToken(tokenObject);
-            return token;
-        }
-
-        private bool ValidateEmail(string email)
-        {
-            var emailValidation = new EmailAddressAttribute();
-
-            return emailValidation.IsValid(email);
-        }
-        private bool ValidatePhone(string phone)
-        {
-            if (phone.Length != 10)
+            var user = await _userManager.FindByNameAsync(updateRolesDto.UserName);
+            if (user == null)
             {
                 return false;
             }
-            var phoneValidation = new PhoneAttribute();
-
-            return phoneValidation.IsValid(phone);
+            await _userManager.AddToRoleAsync(user, StaticUserRole.ADMIN);
+            return true;
         }
+
+        public async Task<bool> RemoveAdmin(UpdateRolesDTO updateRolesDto)
+        {
+            var user = await _userManager.FindByNameAsync(updateRolesDto.UserName);
+            if (user == null)
+            {
+                return false;
+            }
+            var userRoles = await _userManager.GetRolesAsync(user);
+            foreach (var userRole in userRoles)
+            {
+                if (userRole.Equals(StaticUserRole.ADMIN))
+                {
+                    await _userManager.RemoveFromRoleAsync(user, StaticUserRole.ADMIN);
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+
+        
     }
 }

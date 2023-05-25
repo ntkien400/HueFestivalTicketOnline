@@ -31,5 +31,6 @@ namespace HueFestivalTicketOnline.DataAccess.Data
         public DbSet<MenuLocation> MenuLocations { get; set; }
         public DbSet<DetailFesLocation> DetailFesLocations { get; set; }
         public DbSet<InvoiceTicket> InvoiceTickets { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
     }
 }

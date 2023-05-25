@@ -11,7 +11,7 @@ namespace HueFestivalTicketOnline.DataAccess.Repository.IRepository
     public interface IAuthRepository 
     {
         Task<bool> CheckSeedRole();
-        Task<RegisterResult> Register(RegisterDTO registerDto);
-        Task<LoginResult> Login(LoginDTO loginDto);
+        public Task<bool> MakeAdmin(UpdateRolesDTO updateRolesDto);
+        public Task<bool> RemoveAdmin(UpdateRolesDTO updateRolesDto);
     }
 }

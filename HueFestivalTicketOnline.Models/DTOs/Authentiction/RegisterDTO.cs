@@ -12,5 +12,8 @@ namespace HueFestivalTicketOnline.Models.DTOs.Authentiction
         public string Email { get; set; }
         [Phone, Required(ErrorMessage = "Phone is required")]
         public string PhoneNumber { get; set; }
+        public string CCCD { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
     }
 }

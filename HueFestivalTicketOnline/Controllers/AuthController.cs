@@ -33,50 +33,34 @@ namespace HueFestivalTicketOnline.Controllers
                 return Ok("Seeding is successful");
         }
 
-        [HttpPost("register")]
-        [AllowAnonymous]
-        public async Task<ActionResult> Register([FromBody] RegisterDTO registerDto)
+        
+        [HttpPost]
+        [Route("make-admin")]
+        [Authorize(Roles = StaticUserRole.ADMIN)]
+        public async Task<ActionResult> MakeAdmin(UpdateRolesDTO updateRolesDto)
         {
-            var registerResult = await _accountRepo.Register(registerDto);
-            if(registerResult.isExistEmail == true)
+            var result = await _accountRepo.MakeAdmin(updateRolesDto);
+            if(!result)
             {
-                return BadRequest("Email is already used");
+                return BadRequest("Can't find the user");
             }
-            if(registerResult.isExistUser == true)
+            return Ok("Now user is an Admin");
+        }
+
+        [HttpPost]
+        [Route("remove-admin")]
+        [Authorize(Roles = StaticUserRole.ADMIN)]
+        public async Task<ActionResult> RemoveAdmin(UpdateRolesDTO updateRolesDto)
+        {
+            var result = await _accountRepo.RemoveAdmin(updateRolesDto);
+            if(!result)
             {
-                return BadRequest("Username is already used");
+                return BadRequest("Can't find user or user is not Admin");
             }
-            if (registerResult.validEmail == false)
-            {
-                return BadRequest("Email invalid");
-            }
-            if (registerResult.validPhone == false)
-            {
-                return BadRequest("Phone invalid");
-            }
-            if(registerResult.CreateUserResult == false)
-            {
-                return BadRequest(registerResult.errors);
-            }
-            return Ok("Account create successfully");
+            return Ok("User is not Admin anymore");
 
         }
-        [HttpPost("login")]
-        [AllowAnonymous]
-        public async Task<ActionResult> Login([FromBody]LoginDTO loginDto)
-        {
-            var loginResult = await _accountRepo.Login(loginDto);
-            if(loginResult.CheckUserName == false)
-            {
-                return BadRequest("Username is wrong");
-            }
-            if(loginResult.CheckPassword == false)
-            {
-                return BadRequest("Password is wrong");
-            }
-            return Ok(loginResult.Token);
-        }
-        
+
     }
 
 }
