@@ -51,7 +51,6 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
         public IHistoryCheckRepository HistoryCheck { get; private set; }
         public IAboutInformationRepository AboutInformation { get; private set; }
         public IAccountRepository Account { get; private set; }
-        public UserManager<Account> UserManager { get; private set; }
 
         public void Dispose()
         {
