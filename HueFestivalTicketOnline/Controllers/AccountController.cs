@@ -122,7 +122,7 @@ namespace HueFestivalTicketOnline.Controllers
                 if (acc != null)
                 {
                     acc.PasswordOTP = _sendSms.GenerateOTPCode(6);
-                    acc.PasswordOTPExpried = DateTime.Now.AddMinutes(1);
+                    acc.PasswordOTPExpried = DateTime.Now.AddMinutes(10);
                     _unitOfWork.Account.Update(acc);
                     await _unitOfWork.SaveAsync();
                     _sendSms.SendOtpSms(emailOrPhone, acc.PasswordOTP);

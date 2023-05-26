@@ -62,10 +62,10 @@ namespace HueFestivalTicketOnline.Controllers
         [Authorize(Roles =StaticUserRole.ADMIN)]
         public async Task<ActionResult<FesProgram>> AddFesProgram(FesProgramDTO fesProgram)
         {
-            var checkFieldNull = fesProgram.GetType().GetProperties()
+            var checkFieldNotNull = fesProgram.GetType().GetProperties()
                             .Select(f => f.GetValue(fesProgram))
                             .Any(value => value != null);
-            if(!checkFieldNull)
+            if(checkFieldNotNull)
             {
                 _unitOfWork.FesProgram.Add(_mapper.Map<FesProgramDTO, FesProgram>(fesProgram));
                 var result = await _unitOfWork.SaveAsync();

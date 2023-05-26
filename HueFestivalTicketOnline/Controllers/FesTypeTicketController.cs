@@ -25,7 +25,7 @@ namespace HueFestivalTicketOnline.Controllers
         [AllowAnonymous]
         public async Task<ActionResult<FesTypeTicket>> GetProgramTypeTicket(int id)
         {
-            var objFromDb =  await _unitOfWork.FesTypeTicket.GetFirstOrDefaultAsync(o => o.Id == id, includesProperties: "FesProgram,TypeTicket");
+            var objFromDb =  await _unitOfWork.FesTypeTicket.GetFirstOrDefaultAsync(o => o.Id == id, includesProperties: "FesProgram");
             if(objFromDb != null)
             {
                 return Ok(objFromDb);

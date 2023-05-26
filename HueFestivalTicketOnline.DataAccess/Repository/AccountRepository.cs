@@ -75,13 +75,14 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
                 {
                     errors += "#" + error.Description;
                 }
-                registerResult.CreateUserResult = false;
                 registerResult.errors = errors;
             }
+            //Add roles Admin if username is admin.
             if (newUser.UserName.Equals("admin"))
             {
                 await _userManager.AddToRoleAsync(newUser, StaticUserRole.ADMIN);
             }
+
             await _userManager.AddToRoleAsync(newUser, StaticUserRole.USER);
             registerResult.CreateUserResult = true;
             return registerResult;
@@ -195,9 +196,8 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
         }
         public async Task ChangePassword(Account account, string newPassword)
         {
-            var passwordHash = _userManager.PasswordHasher.HashPassword(account,newPassword);
-            account.PasswordHash = passwordHash;
-            await _userManager.UpdateAsync(account);
+            await _userManager.RemovePasswordAsync(account);
+            await _userManager.AddPasswordAsync(account, newPassword);
         }
         private JwtSecurityToken GenerateNewJWT(List<Claim> authClaims)
         {

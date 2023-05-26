@@ -57,10 +57,10 @@ namespace HueFestivalTicketOnline.Controllers
         [Authorize(Roles = StaticUserRole.ADMIN)]
         public async Task<ActionResult<CreateDetailFesLocationDTO>> AddDetailFesLocation(CreateDetailFesLocationDTO createDetail)
         {
-            var checkFieldNull = createDetail.GetType().GetProperties()
+            var checkFieldNotNull = createDetail.GetType().GetProperties()
                                 .Select(crd => crd.GetValue(createDetail))
                                 .Any(value => value != null);
-            if(!checkFieldNull)
+            if(checkFieldNotNull)
             {
                 var checkDate = _unitOfWork.DetailFesLocation.CheckDate(createDetail.StartDate, createDetail.EndDate);
                 if (!checkDate)

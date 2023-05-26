@@ -4,7 +4,7 @@ namespace HueFestivalTicketOnline.Models.DTOs
 {
     public class ViewFesProgram
     {
-        public int ProgramId { get; set; }
+        public int Id { get; set; }
         public string ProgramName { get; set; }
         public string Content { get; set; }
         public int TypeOfflineId { get; set; }

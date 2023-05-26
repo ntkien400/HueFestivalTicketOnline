@@ -39,7 +39,7 @@ namespace HueFestivalTicketOnline.Controllers
             
             if(Date != null)
             {
-                includes.Add(x => x.DateChecked.Date.ToString() == Date);
+                includes.Add(x => x.DateChecked.Date.Date == DateTime.Parse(Date));
             }
             if(programId != null)
             {

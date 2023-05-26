@@ -16,8 +16,8 @@ namespace HueFestivalTicketOnline.DataAccess.Repository
 
         public bool CheckDate(string s1, string s2)
         {
-            var date1 = DateOnly.ParseExact(s1, "dd-MM-yyyy");
-            var date2 = DateOnly.ParseExact(s2, "dd-MM-yyyy");
+            var date1 = DateOnly.ParseExact(s1, "yyyy-MM-dd");
+            var date2 = DateOnly.ParseExact(s2, "yyyy-MM-dd");
             var now = DateTime.Now;
             if (date1 < DateOnly.FromDateTime(now))
                 return false;

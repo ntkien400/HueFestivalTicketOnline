@@ -5,7 +5,7 @@
         public int Id { get; set; }
         public string LocationName { get; set; }
         public string Description { get; set; }
-        public int CategroryLocationId { get; set; }
-        public int ImageId { get; set; }
+        public int SubMenuLocationId { get; set; }
+        public string ImageUrl { get; set; }
     }
 }

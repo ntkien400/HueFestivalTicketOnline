@@ -6,6 +6,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using HueFestivalTicketOnline.Models.DTOs.Authentiction;
 using HueFestivalTicketOnline.DataAccess.Repository.SendMailAndSms;
+using System.Globalization;
 
 namespace HueFestivalTicketOnline.Controllers
 {
@@ -48,7 +49,7 @@ namespace HueFestivalTicketOnline.Controllers
             var invoice = await _unitOfWork.InvoiceTicket.GetFirstOrDefaultAsync(i => i.Id == Guid.Parse(invoiceId), includesProperties:"User,FesTypeTicket");
             var programDetail = await _unitOfWork.DetailFesLocation
                 .GetFirstOrDefaultAsync(pd => pd.FesId == invoice.FesTypeTicket.FesProgramId, includesProperties: "FesProgram,Location");
-            if(DateTime.Now >= DateTime.Parse(programDetail.EndDate))
+            if(DateTime.Now.Date >= DateTime.Parse(programDetail.EndDate))
             {
                 return BadRequest("Festival has ended");
             }
